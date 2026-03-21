@@ -1,0 +1,121 @@
+export interface Bouquet {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  description: string;
+  composition: { name: string; count: string }[];
+  image: string;
+  images?: string[];
+  occasion: string[];
+  rating: number;
+  reviewsCount: number;
+  isHit?: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export const OCCASIONS = [
+  { id: "birthday", label: "День рождения", icon: "solar:gift-linear" },
+  { id: "date", label: "Свидание", icon: "solar:hearts-linear" },
+  { id: "wedding", label: "Свадьба", icon: "solar:users-group-two-rounded-linear" },
+  { id: "no-reason", label: "Без повода", icon: "solar:cup-star-linear" },
+] as const;
+
+export const BOUQUETS: Bouquet[] = [
+  {
+    id: "1",
+    slug: "utrennij-tuman",
+    name: "Утренний туман",
+    price: 4500,
+    description:
+      "Воздушный букет в пастельных тонах. Идеальное сочетание пионовидных роз и ароматного эвкалипта. Создает легкое, романтичное настроение.",
+    composition: [
+      { name: "Роза пионовидная", count: "5 шт" },
+      { name: "Эвкалипт", count: "3 шт" },
+      { name: "Упаковка крафт", count: "1 шт" },
+    ],
+    image:
+      "https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=1200&auto=format&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&w=200&auto=format&fit=crop",
+    ],
+    occasion: ["birthday", "date"],
+    rating: 4.9,
+    reviewsCount: 12,
+    isHit: true,
+  },
+  {
+    id: "2",
+    slug: "nezhnost",
+    name: "Нежность",
+    price: 3200,
+    description:
+      "Гортензия и диантусы в нежных пастельных тонах. Идеально для романтического жеста.",
+    composition: [
+      { name: "Гортензия", count: "3 шт" },
+      { name: "Диантус", count: "5 шт" },
+      { name: "Упаковка крафт", count: "1 шт" },
+    ],
+    image:
+      "https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&w=600&auto=format&fit=crop",
+    occasion: ["date", "wedding"],
+    rating: 4.8,
+    reviewsCount: 8,
+  },
+  {
+    id: "3",
+    slug: "rozovyj-svet",
+    name: "Розовый свет",
+    price: 5500,
+    description:
+      "Роскошный букет из роз и пионов. Яркий акцент для особых праздников.",
+    composition: [
+      { name: "Роза", count: "7 шт" },
+      { name: "Пион", count: "3 шт" },
+      { name: "Эвкалипт", count: "2 шт" },
+    ],
+    image:
+      "https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=600&auto=format&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=200&auto=format&fit=crop",
+    ],
+    occasion: ["birthday", "wedding"],
+    rating: 5,
+    reviewsCount: 24,
+  },
+];
+
+export const ADDONS = [
+  {
+    id: "card",
+    name: "Открытка",
+    price: 0,
+    icon: "solar:letter-linear",
+  },
+];
+
+export const SUBSCRIPTION_PLANS = [
+  {
+    id: "classic",
+    name: "Классик",
+    description: "Средние букеты для украшения дома или рабочего стола.",
+    price: 3500,
+    popular: true,
+    features: ["Сезонные цветы", "Бесплатная ваза (в 1 раз)"],
+  },
+  {
+    id: "premium",
+    name: "Премиум",
+    description: "Роскошные объемные композиции и экзотические цветы.",
+    price: 7000,
+    popular: false,
+    features: ["Редкие сорта", "Премиум упаковка"],
+  },
+];

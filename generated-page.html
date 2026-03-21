@@ -1,0 +1,658 @@
+<html lang="ru"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLORA | Цветочный магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d4d4d4; }
+
+        /* Form Controls */
+        .custom-checkbox input:checked + div { background-color: #171717; border-color: #171717; }
+        .custom-checkbox input:checked + div svg { opacity: 1; transform: scale(1); }
+        
+        .custom-radio input:checked + div { border-color: #171717; }
+        .custom-radio input:checked + div > div { transform: scale(1); background-color: #171717; }
+
+        .custom-toggle input:checked + div { background-color: #171717; }
+        .custom-toggle input:checked + div > div { transform: translateX(100%); border-color: #171717; }
+
+        /* Range Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #ffffff; border: 2px solid #171717; cursor: pointer;
+            margin-top: -6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #e5e5e5; border-radius: 4px; }
+        
+        iconify-icon { stroke-width: 1.5px; }
+
+        /* Hide pages by default */
+        .page-view { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .page-view.active { display: block; opacity: 1; animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-neutral-50 text-neutral-800 selection:bg-rose-100 selection:text-rose-900 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-neutral-100/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <button class="lg:hidden p-2 -ml-2 text-neutral-500 hover:text-neutral-900 transition-colors">
+                <iconify-icon icon="solar:hamburger-menu-linear" width="24" height="24"></iconify-icon>
+            </button>
+
+            <!-- Logo -->
+            <button onclick="nav('home')" class="text-xl font-semibold tracking-tighter text-neutral-900 uppercase">
+                FLORA
+            </button>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden lg:flex items-center gap-8">
+                <button onclick="nav('catalog')" class="text-sm text-neutral-500 hover:text-neutral-900 font-medium transition-colors">Каталог</button>
+                <button onclick="nav('quiz')" class="text-sm text-neutral-500 hover:text-neutral-900 transition-colors">Подобрать букет</button>
+                <button onclick="nav('subscription')" class="text-sm text-neutral-500 hover:text-neutral-900 transition-colors">Подписка</button>
+                <button onclick="nav('404')" class="text-sm text-neutral-500 hover:text-neutral-900 transition-colors">О нас</button>
+            </nav>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <button class="hidden sm:flex p-2 text-neutral-500 hover:text-neutral-900 transition-colors">
+                    <iconify-icon icon="solar:magnifer-linear" width="22" height="22"></iconify-icon>
+                </button>
+                <button onclick="nav('account')" class="hidden sm:flex p-2 text-neutral-500 hover:text-neutral-900 transition-colors">
+                    <iconify-icon icon="solar:user-circle-linear" width="22" height="22"></iconify-icon>
+                </button>
+                <button onclick="nav('cart')" class="relative p-2 text-neutral-900 transition-colors group">
+                    <iconify-icon icon="solar:bag-3-linear" width="22" height="22"></iconify-icon>
+                    <span class="absolute top-1 right-1 w-4 h-4 bg-neutral-900 text-white text-xs font-medium rounded-full flex items-center justify-center border-2 border-white transform scale-100 group-hover:scale-110 transition-transform">2</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-grow">
+        
+        <!-- ==================== HOME PAGE ==================== -->
+        <main id="home" class="page-view active">
+            <!-- Hero Section -->
+            <section class="relative overflow-hidden bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 lg:pt-24 lg:pb-32 flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
+                    <div class="flex-1 w-full text-center lg:text-left z-10">
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-50 text-rose-600 text-xs font-medium mb-6">
+                            <iconify-icon icon="solar:routing-2-linear" width="14" height="14"></iconify-icon>
+                            Доставка от 60 минут
+                        </div>
+                        <h1 class="text-4xl lg:text-5xl xl:text-6xl font-medium tracking-tight text-neutral-900 mb-6 leading-[1.1]">
+                            Свежие цветы <br class="hidden lg:block">для особых моментов
+                        </h1>
+                        <p class="text-sm lg:text-base text-neutral-500 mb-8 max-w-lg mx-auto lg:mx-0">
+                            Собираем аккуратные букеты с любовью к деталям. Без лишней упаковки, только свежесть и эстетика в каждом стебле.
+                        </p>
+                        <div class="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                            <button onclick="nav('catalog')" class="w-full sm:w-auto px-6 py-3 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all">Смотреть каталог</button>
+                            <button onclick="nav('quiz')" class="w-full sm:w-auto px-6 py-3 bg-white border border-neutral-200 text-neutral-900 text-sm font-medium rounded-full hover:bg-neutral-50 transition-all">Подобрать по поводу</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full relative">
+                        <div class="absolute inset-0 bg-rose-50/50 rounded-[2rem] transform rotate-3 scale-105 z-0"></div>
+                        <div class="relative z-10 aspect-[4/5] lg:aspect-square overflow-hidden rounded-[2rem] bg-neutral-100 border border-neutral-100/50">
+                            <img src="https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&amp;w=1200&amp;auto=format&amp;fit=crop" alt="Букет" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ==================== CATALOG PAGE ==================== -->
+        <main id="catalog" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                <!-- Sidebar Filters -->
+                <aside class="w-full lg:w-64 flex-shrink-0">
+                    <div class="sticky top-24">
+                        <h3 class="text-lg font-medium tracking-tight text-neutral-900 mb-6">Фильтры</h3>
+                        <div class="space-y-8">
+                            <div>
+                                <p class="text-sm font-medium text-neutral-900 mb-4">Повод</p>
+                                <div class="space-y-3">
+                                    <label class="flex items-center gap-3 cursor-pointer group custom-checkbox">
+                                        <input type="checkbox" class="hidden" checked="">
+                                        <div class="w-4 h-4 rounded border border-neutral-300 bg-white flex items-center justify-center transition-colors group-hover:border-neutral-400">
+                                            <svg class="w-2.5 h-2.5 text-white opacity-0 transform scale-50 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                        </div>
+                                        <span class="text-sm text-neutral-600 group-hover:text-neutral-900 transition-colors">День рождения</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer group custom-checkbox">
+                                        <input type="checkbox" class="hidden">
+                                        <div class="w-4 h-4 rounded border border-neutral-300 bg-white flex items-center justify-center transition-colors">
+                                            <svg class="w-2.5 h-2.5 text-white opacity-0 transform scale-50 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                        </div>
+                                        <span class="text-sm text-neutral-600 transition-colors">Свидание</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-neutral-900 mb-4">Цена, ₽</p>
+                                <input type="range" min="1000" max="15000" value="5000" class="mb-4">
+                                <div class="flex items-center gap-2">
+                                    <input type="text" value="1 000" class="w-full px-3 py-2 text-xs text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none text-center">
+                                    <span class="text-neutral-400 text-xs">-</span>
+                                    <input type="text" value="5 000" class="w-full px-3 py-2 text-xs text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none text-center">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Grid -->
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-8">
+                        <h2 class="text-2xl font-medium tracking-tight text-neutral-900">Каталог</h2>
+                        <button class="text-sm text-neutral-600 flex items-center gap-1">По популярности <iconify-icon icon="solar:alt-arrow-down-linear"></iconify-icon></button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Product Item -->
+                        <div class="group cursor-pointer" onclick="nav('product')">
+                            <div class="relative aspect-[4/5] overflow-hidden rounded-2xl bg-neutral-100 mb-4 border border-neutral-100">
+                                <img src="https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&amp;w=600&amp;auto=format&amp;fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur text-xs font-medium uppercase tracking-wider text-neutral-900 rounded-lg">Хит</div>
+                            </div>
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <h3 class="text-sm font-medium text-neutral-900 mb-1">Утренний туман</h3>
+                                    <p class="text-xs text-neutral-500">Пионовидные розы, эвкалипт</p>
+                                </div>
+                                <p class="text-sm font-medium text-neutral-900 whitespace-nowrap">4 500 ₽</p>
+                            </div>
+                        </div>
+
+                        <!-- Product Item 2 -->
+                        <div class="group cursor-pointer" onclick="nav('product')">
+                            <div class="relative aspect-[4/5] overflow-hidden rounded-2xl bg-neutral-100 mb-4 border border-neutral-100">
+                                <img src="https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&amp;w=600&amp;auto=format&amp;fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            </div>
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <h3 class="text-sm font-medium text-neutral-900 mb-1">Нежность</h3>
+                                    <p class="text-xs text-neutral-500">Гортензия, диантусы</p>
+                                </div>
+                                <p class="text-sm font-medium text-neutral-900 whitespace-nowrap">3 200 ₽</p>
+                            </div>
+                        </div>
+
+                         <!-- Product Item 3 (Loading Skeleton example) -->
+                         <div class="group animate-pulse">
+                            <div class="relative aspect-[4/5] rounded-2xl bg-neutral-200/60 mb-4"></div>
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="w-full">
+                                    <div class="h-4 bg-neutral-200/60 rounded w-2/3 mb-2"></div>
+                                    <div class="h-3 bg-neutral-200/60 rounded w-1/2"></div>
+                                </div>
+                                <div class="h-4 bg-neutral-200/60 rounded w-16"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ==================== QUIZ PAGE ==================== -->
+        <main id="quiz" class="page-view max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-24">
+            <div class="text-center mb-12">
+                <span class="text-xs font-medium text-neutral-500 tracking-widest uppercase mb-3 block">Шаг 1 из 4</span>
+                <div class="w-full max-w-xs mx-auto h-1 bg-neutral-100 rounded-full mb-6 overflow-hidden">
+                    <div class="h-full bg-neutral-900 w-1/4 rounded-full"></div>
+                </div>
+                <h1 class="text-3xl font-medium tracking-tight text-neutral-900 mb-4">Какой повод?</h1>
+                <p class="text-sm text-neutral-500">Поможем подобрать идеальный букет для вашего события</p>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
+                <button class="p-6 rounded-2xl border-2 border-neutral-900 bg-neutral-50 flex flex-col items-center gap-3 text-center transition-all">
+                    <iconify-icon icon="solar:gift-linear" width="28" class="text-neutral-900"></iconify-icon>
+                    <span class="text-sm font-medium text-neutral-900">День рождения</span>
+                </button>
+                <button class="p-6 rounded-2xl border border-neutral-200 bg-white hover:border-neutral-300 flex flex-col items-center gap-3 text-center transition-all">
+                    <iconify-icon icon="solar:hearts-linear" width="28" class="text-neutral-400"></iconify-icon>
+                    <span class="text-sm font-medium text-neutral-600">Свидание</span>
+                </button>
+                <button class="p-6 rounded-2xl border border-neutral-200 bg-white hover:border-neutral-300 flex flex-col items-center gap-3 text-center transition-all">
+                    <iconify-icon icon="solar:users-group-two-rounded-linear" width="28" class="text-neutral-400"></iconify-icon>
+                    <span class="text-sm font-medium text-neutral-600">Свадьба</span>
+                </button>
+                <button class="p-6 rounded-2xl border border-neutral-200 bg-white hover:border-neutral-300 flex flex-col items-center gap-3 text-center transition-all">
+                    <iconify-icon icon="solar:cup-star-linear" width="28" class="text-neutral-400"></iconify-icon>
+                    <span class="text-sm font-medium text-neutral-600">Без повода</span>
+                </button>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-neutral-100 pt-8">
+                <button class="text-sm font-medium text-neutral-400 hover:text-neutral-900 transition-colors">Назад</button>
+                <button onclick="nav('catalog')" class="px-8 py-3 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all">Далее</button>
+            </div>
+        </main>
+
+        <!-- ==================== PRODUCT CARD ==================== -->
+        <main id="product" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 mb-24">
+                <!-- Gallery -->
+                <div class="space-y-4">
+                    <div class="aspect-[4/5] rounded-[2rem] overflow-hidden bg-neutral-100 border border-neutral-100">
+                        <img src="https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&amp;w=1000&amp;auto=format&amp;fit=crop" class="w-full h-full object-cover">
+                    </div>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="aspect-square rounded-xl overflow-hidden bg-neutral-100 border-2 border-neutral-900 cursor-pointer"><img src="https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&amp;w=200&amp;auto=format&amp;fit=crop" class="w-full h-full object-cover"></div>
+                        <div class="aspect-square rounded-xl overflow-hidden bg-neutral-100 border border-transparent hover:border-neutral-200 cursor-pointer opacity-60 hover:opacity-100 transition-all"><img src="https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&amp;w=200&amp;auto=format&amp;fit=crop" class="w-full h-full object-cover"></div>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="flex flex-col">
+                    <nav class="flex text-xs text-neutral-400 mb-6 gap-2">
+                        <span class="hover:text-neutral-900 cursor-pointer transition-colors" onclick="nav('catalog')">Каталог</span> / 
+                        <span class="hover:text-neutral-900 cursor-pointer transition-colors">Авторские</span> / 
+                        <span class="text-neutral-900">Утренний туман</span>
+                    </nav>
+
+                    <h1 class="text-3xl lg:text-4xl font-medium tracking-tight text-neutral-900 mb-2">Утренний туман</h1>
+                    <div class="flex items-center gap-4 mb-8">
+                        <span class="text-2xl font-medium text-neutral-900 tracking-tight">4 500 ₽</span>
+                        <div class="flex items-center gap-1 text-xs font-medium text-yellow-500 bg-yellow-50 px-2 py-1 rounded-md">
+                            <iconify-icon icon="solar:star-bold"></iconify-icon> 4.9 <span class="text-neutral-400 font-normal ml-1">(12)</span>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-neutral-500 leading-relaxed mb-8">
+                        Воздушный букет в пастельных тонах. Идеальное сочетание пионовидных роз и ароматного эвкалипта. Создает легкое, романтичное настроение.
+                    </p>
+
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="flex items-center border border-neutral-200 rounded-full bg-white h-12 px-2">
+                            <button class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-neutral-900"><iconify-icon icon="solar:minus-linear"></iconify-icon></button>
+                            <span class="w-8 text-center text-sm font-medium text-neutral-900">1</span>
+                            <button class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-neutral-900"><iconify-icon icon="solar:add-linear"></iconify-icon></button>
+                        </div>
+                        <button onclick="nav('cart')" class="flex-1 h-12 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all shadow-sm flex items-center justify-center gap-2">
+                            В корзину <iconify-icon icon="solar:bag-3-linear"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <!-- Accordion Details -->
+                    <div class="border-t border-neutral-100 divide-y divide-neutral-100">
+                        <details class="group py-4" open="">
+                            <summary class="flex justify-between items-center font-medium text-sm cursor-pointer list-none text-neutral-900">
+                                Состав
+                                <span class="transition group-open:rotate-180"><iconify-icon icon="solar:alt-arrow-down-linear"></iconify-icon></span>
+                            </summary>
+                            <div class="text-sm text-neutral-500 mt-4 space-y-2">
+                                <div class="flex justify-between"><span>Роза пионовидная</span> <span class="text-neutral-400 border-b border-dotted border-neutral-200 flex-grow mx-2"></span> <span>5 шт</span></div>
+                                <div class="flex justify-between"><span>Эвкалипт</span> <span class="text-neutral-400 border-b border-dotted border-neutral-200 flex-grow mx-2"></span> <span>3 шт</span></div>
+                                <div class="flex justify-between"><span>Упаковка крафт</span> <span class="text-neutral-400 border-b border-dotted border-neutral-200 flex-grow mx-2"></span> <span>1 шт</span></div>
+                            </div>
+                        </details>
+                        <details class="group py-4">
+                            <summary class="flex justify-between items-center font-medium text-sm cursor-pointer list-none text-neutral-900">
+                                Доставка и оплата
+                                <span class="transition group-open:rotate-180"><iconify-icon icon="solar:alt-arrow-down-linear"></iconify-icon></span>
+                            </summary>
+                            <div class="text-sm text-neutral-500 mt-4 leading-relaxed">
+                                Бесплатная доставка по городу от 3000 ₽. Время доставки от 60 минут после сборки. Оплата картой, SBP или наличными курьеру.
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ==================== CART PAGE ==================== -->
+        <main id="cart" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+            <h1 class="text-2xl lg:text-3xl font-medium tracking-tight text-neutral-900 mb-8 lg:mb-12">Корзина</h1>
+            
+            <div class="flex flex-col lg:flex-row gap-12">
+                <!-- Items -->
+                <div class="flex-1 space-y-6">
+                    <!-- Item 1 -->
+                    <div class="flex gap-4 sm:gap-6 pb-6 border-b border-neutral-100">
+                        <div class="w-24 sm:w-32 aspect-square rounded-2xl overflow-hidden bg-neutral-100 flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&amp;w=300&amp;auto=format&amp;fit=crop" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex flex-col flex-1 justify-between py-1">
+                            <div class="flex justify-between items-start gap-4">
+                                <div>
+                                    <h3 class="text-sm font-medium text-neutral-900 mb-1">Утренний туман</h3>
+                                    <p class="text-xs text-neutral-500">Стандартный размер</p>
+                                </div>
+                                <button class="text-neutral-400 hover:text-red-500 transition-colors"><iconify-icon icon="solar:trash-bin-trash-linear" width="20"></iconify-icon></button>
+                            </div>
+                            <div class="flex justify-between items-center mt-4">
+                                <div class="flex items-center border border-neutral-200 rounded-full bg-white h-9 px-1">
+                                    <button class="w-7 h-7 flex items-center justify-center text-neutral-500 hover:text-neutral-900"><iconify-icon icon="solar:minus-linear" width="14"></iconify-icon></button>
+                                    <span class="w-6 text-center text-xs font-medium text-neutral-900">1</span>
+                                    <button class="w-7 h-7 flex items-center justify-center text-neutral-500 hover:text-neutral-900"><iconify-icon icon="solar:add-linear" width="14"></iconify-icon></button>
+                                </div>
+                                <span class="text-sm font-medium text-neutral-900 tracking-tight">4 500 ₽</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cross-sell -->
+                    <div class="pt-6">
+                        <h4 class="text-sm font-medium text-neutral-900 mb-4">Добавить к заказу</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <div class="border border-neutral-100 rounded-2xl p-3 flex flex-col items-center text-center group cursor-pointer hover:border-neutral-200 transition-colors">
+                                <div class="w-16 h-16 bg-neutral-50 rounded-full mb-3 flex items-center justify-center text-neutral-400 group-hover:text-rose-400 transition-colors">
+                                    <iconify-icon icon="solar:letter-linear" width="28"></iconify-icon>
+                                </div>
+                                <p class="text-xs font-medium text-neutral-900 mb-1">Открытка</p>
+                                <p class="text-xs text-neutral-500 mb-3">+ 0 ₽</p>
+                                <button class="text-xs font-medium text-neutral-900 bg-neutral-100 px-4 py-1.5 rounded-full w-full group-hover:bg-neutral-900 group-hover:text-white transition-colors">Добавить</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="w-full lg:w-80 xl:w-96 flex-shrink-0">
+                    <div class="bg-neutral-50 rounded-[2rem] p-6 lg:p-8 sticky top-24">
+                        <h3 class="text-lg font-medium tracking-tight text-neutral-900 mb-6">Итого</h3>
+                        <div class="space-y-4 text-sm mb-6">
+                            <div class="flex justify-between text-neutral-500"><span>Товары (1)</span> <span class="text-neutral-900">4 500 ₽</span></div>
+                            <div class="flex justify-between text-neutral-500"><span>Доставка</span> <span class="text-neutral-900">Бесплатно</span></div>
+                        </div>
+                        <div class="pt-4 border-t border-neutral-200/60 flex justify-between items-center mb-8">
+                            <span class="font-medium text-neutral-900">К оплате</span>
+                            <span class="text-xl font-semibold tracking-tight text-neutral-900">4 500 ₽</span>
+                        </div>
+                        <button onclick="nav('checkout')" class="w-full py-3.5 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all shadow-sm">
+                            Перейти к оформлению
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ==================== CHECKOUT PAGE ==================== -->
+        <main id="checkout" class="page-view max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+            <h1 class="text-2xl font-medium tracking-tight text-neutral-900 mb-8">Оформление заказа</h1>
+            
+            <div class="flex flex-col lg:flex-row gap-12">
+                <!-- Form Steps -->
+                <div class="flex-1 space-y-8">
+                    
+                    <!-- Step 1 -->
+                    <section class="bg-white p-6 sm:p-8 rounded-[2rem] border border-neutral-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="w-6 h-6 rounded-full bg-neutral-900 text-white flex items-center justify-center text-xs font-medium">1</span>
+                            <h2 class="text-lg font-medium tracking-tight text-neutral-900">Получатель и адрес</h2>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Город и улица</label>
+                                <input type="text" placeholder="Москва, ул. Тверская..." class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-900/5 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Квартира / Офис</label>
+                                <input type="text" placeholder="142" class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Подъезд</label>
+                                <input type="text" placeholder="3" class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all">
+                            </div>
+                            <div class="sm:col-span-2 mt-2 border-t border-neutral-100 pt-6">
+                                <label class="flex items-center gap-3 cursor-pointer group custom-checkbox mb-4">
+                                    <input type="checkbox" class="hidden" checked="">
+                                    <div class="w-4 h-4 rounded border border-neutral-300 bg-white flex items-center justify-center transition-colors">
+                                        <svg class="w-2.5 h-2.5 text-white opacity-0 transform scale-50 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                    <span class="text-sm text-neutral-900">Я получатель</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Имя</label>
+                                <input type="text" placeholder="Иван" class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Телефон</label>
+                                <input type="tel" placeholder="+7 (999) 000-00-00" class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 2 -->
+                    <section class="bg-white p-6 sm:p-8 rounded-[2rem] border border-neutral-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="w-6 h-6 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center text-xs font-medium">2</span>
+                            <h2 class="text-lg font-medium tracking-tight text-neutral-900">Дата и время</h2>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button class="px-4 py-2 text-sm font-medium bg-neutral-900 text-white rounded-xl">Сегодня</button>
+                            <button class="px-4 py-2 text-sm font-medium bg-neutral-50 text-neutral-600 rounded-xl hover:bg-neutral-100 transition-colors">Завтра</button>
+                            <button class="px-4 py-2 text-sm font-medium bg-neutral-50 text-neutral-600 rounded-xl hover:bg-neutral-100 transition-colors">Выбрать дату</button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <button class="px-3 py-2 text-xs font-medium border-2 border-neutral-900 text-neutral-900 rounded-xl text-center">Ближайшее<br><span class="text-neutral-500 font-normal">от 60 мин</span></button>
+                            <button class="px-3 py-2 text-xs font-medium border border-neutral-200 text-neutral-600 rounded-xl text-center hover:border-neutral-300">Утро<br><span class="text-neutral-400 font-normal">9:00 - 12:00</span></button>
+                            <button class="px-3 py-2 text-xs font-medium border border-neutral-200 text-neutral-600 rounded-xl text-center hover:border-neutral-300">День<br><span class="text-neutral-400 font-normal">12:00 - 18:00</span></button>
+                            <button class="px-3 py-2 text-xs font-medium border border-neutral-200 text-neutral-600 rounded-xl text-center hover:border-neutral-300">Вечер<br><span class="text-neutral-400 font-normal">18:00 - 22:00</span></button>
+                        </div>
+                    </section>
+
+                    <!-- Step 3 (Editor mini) -->
+                    <section class="bg-white p-6 sm:p-8 rounded-[2rem] border border-neutral-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 h-6 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center text-xs font-medium">3</span>
+                                <h2 class="text-lg font-medium tracking-tight text-neutral-900">Бесплатная открытка</h2>
+                            </div>
+                            <label class="flex items-center cursor-pointer custom-toggle">
+                                <input type="checkbox" class="hidden" checked="">
+                                <div class="relative w-11 h-6 bg-neutral-200 rounded-full transition-colors">
+                                    <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm"></div>
+                                </div>
+                            </label>
+                        </div>
+                        <textarea rows="3" placeholder="Текст послания (до 200 символов)..." class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none resize-none transition-all"></textarea>
+                    </section>
+
+                </div>
+
+                <!-- Summary Sticky -->
+                <div class="w-full lg:w-80 flex-shrink-0">
+                    <div class="bg-white rounded-[2rem] p-6 lg:p-8 border border-neutral-100 shadow-sm sticky top-24">
+                        <h3 class="font-medium tracking-tight text-neutral-900 mb-4">Оплата</h3>
+                        <div class="space-y-3 mb-6">
+                            <label class="flex items-center gap-3 p-3 border border-neutral-200 rounded-xl cursor-pointer group custom-radio">
+                                <input type="radio" name="payment" class="hidden" checked="">
+                                <div class="w-4 h-4 rounded-full border border-neutral-300 flex items-center justify-center transition-colors">
+                                    <div class="w-2 h-2 rounded-full bg-transparent transform scale-50 transition-all"></div>
+                                </div>
+                                <span class="text-sm font-medium text-neutral-900 flex-1">Банковская карта</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 border border-neutral-200 rounded-xl cursor-pointer group custom-radio">
+                                <input type="radio" name="payment" class="hidden">
+                                <div class="w-4 h-4 rounded-full border border-neutral-300 flex items-center justify-center transition-colors">
+                                    <div class="w-2 h-2 rounded-full bg-transparent transform scale-50 transition-all"></div>
+                                </div>
+                                <span class="text-sm font-medium text-neutral-900 flex-1">Система быстрых платежей</span>
+                            </label>
+                        </div>
+
+                        <div class="border-t border-neutral-100 pt-4 mb-6">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm text-neutral-500">Итого</span>
+                                <span class="text-xl font-semibold tracking-tight text-neutral-900">4 500 ₽</span>
+                            </div>
+                        </div>
+
+                        <button onclick="nav('success')" class="w-full py-3.5 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all shadow-sm mb-3">
+                            Оплатить
+                        </button>
+                        <p class="text-[10px] text-neutral-400 text-center leading-relaxed px-2">
+                            Нажимая кнопку, вы соглашаетесь с <a href="#" class="underline hover:text-neutral-600">условиями оферты</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ==================== ACCOUNT PAGE ==================== -->
+        <main id="account" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+            <h1 class="text-2xl font-medium tracking-tight text-neutral-900 mb-8">Личный кабинет</h1>
+            <div class="flex flex-col md:flex-row gap-8 lg:gap-12">
+                
+                <!-- Sidebar -->
+                <aside class="w-full md:w-56 flex-shrink-0 space-y-1">
+                    <button class="w-full text-left px-4 py-2.5 rounded-xl bg-neutral-100 text-sm font-medium text-neutral-900 transition-colors">Профиль</button>
+                    <button class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900 transition-colors">История заказов</button>
+                    <button class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900 transition-colors">Мои поводы</button>
+                    <button class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900 transition-colors text-red-500 mt-4">Выйти</button>
+                </aside>
+
+                <!-- Content -->
+                <div class="flex-1 bg-white border border-neutral-100 rounded-[2rem] p-6 sm:p-8 shadow-sm">
+                    <h2 class="text-lg font-medium tracking-tight text-neutral-900 mb-6">Личные данные</h2>
+                    <form class="max-w-md space-y-4">
+                        <div>
+                            <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Имя</label>
+                            <input type="text" value="Иван Иванов" class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Email</label>
+                            <input type="email" value="ivan@example.com" class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-neutral-500 mb-1.5 ml-1">Телефон</label>
+                            <input type="tel" value="+7 (999) 123-45-67" class="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all">
+                        </div>
+                        <div class="pt-4">
+                            <button type="button" class="px-6 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all">Сохранить изменения</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- ==================== SUBSCRIPTION PAGE ==================== -->
+        <main id="subscription" class="page-view max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-24 text-center">
+            <span class="text-xs font-medium text-rose-500 tracking-widest uppercase mb-3 block">Новинка</span>
+            <h1 class="text-3xl lg:text-4xl font-medium tracking-tight text-neutral-900 mb-4">Цветочная подписка</h1>
+            <p class="text-sm lg:text-base text-neutral-500 mb-12 max-w-lg mx-auto">
+                Свежие авторские букеты у вас дома регулярно. Выберите удобный формат, остальное мы берем на себя.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
+                <div class="p-8 border-2 border-neutral-900 rounded-[2rem] bg-white relative">
+                    <div class="absolute top-0 right-8 -translate-y-1/2 bg-neutral-900 text-white text-[10px] font-medium uppercase tracking-wider px-3 py-1 rounded-full">Популярно</div>
+                    <h3 class="text-xl font-medium text-neutral-900 mb-2">Классик</h3>
+                    <p class="text-xs text-neutral-500 mb-6 h-8">Средние букеты для украшения дома или рабочего стола.</p>
+                    <div class="text-2xl font-semibold tracking-tight text-neutral-900 mb-6">от 3 500 ₽ <span class="text-sm font-normal text-neutral-400">/ раз</span></div>
+                    <ul class="space-y-3 mb-8 text-sm text-neutral-600">
+                        <li class="flex items-center gap-2"><iconify-icon icon="solar:check-circle-linear" class="text-neutral-900"></iconify-icon> Сезонные цветы</li>
+                        <li class="flex items-center gap-2"><iconify-icon icon="solar:check-circle-linear" class="text-neutral-900"></iconify-icon> Бесплатная ваза (в 1 раз)</li>
+                    </ul>
+                    <button onclick="nav('checkout')" class="w-full py-3 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all">Оформить</button>
+                </div>
+
+                <div class="p-8 border border-neutral-200 rounded-[2rem] bg-white hover:border-neutral-300 transition-colors">
+                    <h3 class="text-xl font-medium text-neutral-900 mb-2">Премиум</h3>
+                    <p class="text-xs text-neutral-500 mb-6 h-8">Роскошные объемные композиции и экзотические цветы.</p>
+                    <div class="text-2xl font-semibold tracking-tight text-neutral-900 mb-6">от 7 000 ₽ <span class="text-sm font-normal text-neutral-400">/ раз</span></div>
+                    <ul class="space-y-3 mb-8 text-sm text-neutral-600">
+                        <li class="flex items-center gap-2"><iconify-icon icon="solar:check-circle-linear" class="text-neutral-900"></iconify-icon> Редкие сорта</li>
+                        <li class="flex items-center gap-2"><iconify-icon icon="solar:check-circle-linear" class="text-neutral-900"></iconify-icon> Премиум упаковка</li>
+                    </ul>
+                    <button onclick="nav('checkout')" class="w-full py-3 bg-neutral-50 text-neutral-900 text-sm font-medium rounded-full hover:bg-neutral-100 transition-all">Выбрать</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- ==================== SUCCESS PAGE ==================== -->
+        <main id="success" class="page-view max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+            <div class="w-20 h-20 rounded-full bg-green-50 text-green-500 flex items-center justify-center mx-auto mb-6">
+                <iconify-icon icon="solar:check-read-linear" width="40"></iconify-icon>
+            </div>
+            <h1 class="text-2xl font-medium tracking-tight text-neutral-900 mb-2">Заказ успешно оформлен!</h1>
+            <p class="text-sm text-neutral-500 mb-8">Номер вашего заказа: <span class="font-medium text-neutral-900">#FL-8932</span></p>
+            <div class="bg-white border border-neutral-100 rounded-2xl p-6 mb-8 text-left text-sm space-y-3 shadow-sm">
+                <div class="flex justify-between"><span class="text-neutral-500">Статус</span><span class="font-medium text-neutral-900">В обработке</span></div>
+                <div class="flex justify-between"><span class="text-neutral-500">Доставка</span><span class="font-medium text-neutral-900">Сегодня, 14:00 - 15:00</span></div>
+            </div>
+            <div class="flex gap-4 justify-center">
+                <button onclick="nav('home')" class="px-6 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all">На главную</button>
+            </div>
+        </main>
+
+        <!-- ==================== 404 PAGE ==================== -->
+        <main id="404" class="page-view max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+            <h1 class="text-6xl lg:text-8xl font-medium tracking-tighter text-neutral-200 mb-4">404</h1>
+            <p class="text-lg font-medium text-neutral-900 mb-2">Страница не найдена</p>
+            <p class="text-sm text-neutral-500 mb-8">Кажется, букет, который вы ищете, уже завял или его никогда не существовало.</p>
+            <button onclick="nav('catalog')" class="px-6 py-3 bg-white border border-neutral-200 text-neutral-900 text-sm font-medium rounded-full hover:bg-neutral-50 transition-all shadow-sm">Вернуться в каталог</button>
+        </main>
+
+    </div>
+
+    <!-- Footer (Always visible) -->
+    <footer class="bg-white border-t border-neutral-100 pt-16 pb-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div class="lg:col-span-1">
+                    <span class="text-xl font-semibold tracking-tighter text-neutral-900 mb-4 inline-block uppercase">FLORA</span>
+                    <p class="text-xs text-neutral-500 mb-6 max-w-xs leading-relaxed">Доставляем эмоции и свежие цветы каждый день. Создано с любовью к минимализму.</p>
+                </div>
+                <div>
+                    <h4 class="text-xs font-medium uppercase tracking-wider text-neutral-900 mb-4">Магазин</h4>
+                    <ul class="space-y-3">
+                        <li><button onclick="nav('catalog')" class="text-sm text-neutral-500 hover:text-neutral-900 transition-colors">Каталог</button></li>
+                        <li><button onclick="nav('subscription')" class="text-sm text-neutral-500 hover:text-neutral-900 transition-colors">Подписка</button></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xs font-medium uppercase tracking-wider text-neutral-900 mb-4">Покупателям</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-sm text-neutral-500 hover:text-neutral-900 transition-colors">Доставка и оплата</a></li>
+                        <li><button onclick="nav('account')" class="text-sm text-neutral-500 hover:text-neutral-900 transition-colors">Личный кабинет</button></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-neutral-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p class="text-xs text-neutral-400">© 2023 Flora. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Simple Navigation Script for the Prototype -->
+    <script>
+        function nav(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page-view').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show requested page
+            const target = document.getElementById(pageId);
+            if (target) {
+                target.classList.add('active');
+            } else {
+                document.getElementById('404').classList.add('active');
+            }
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+
+</body></html>

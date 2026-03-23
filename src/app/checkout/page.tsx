@@ -13,6 +13,13 @@ const DELIVERY_SLOTS = [
   { id: "evening", label: "Вечер", time: "18:00 - 22:00" },
 ];
 
+const CARD_TEMPLATES = [
+  "С днем рождения! Пусть каждый день будет наполнен радостью и теплом.",
+  "Спасибо за все, что ты делаешь. Этот букет — с любовью.",
+  "Прости меня. Очень ценю тебя и наши отношения.",
+  "Ты делаешь мой мир ярче. Обнимаю!",
+];
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, total } = useCart();
@@ -34,6 +41,10 @@ export default function CheckoutPage() {
     const formatted = formatPhone(e.target.value);
     setPhoneValue(formatted);
     setPhoneError("");
+  };
+
+  const applyCardTemplate = (text: string) => {
+    setCardText(text.slice(0, 200));
   };
 
   const handleSubmit = async () => {
@@ -250,6 +261,30 @@ export default function CheckoutPage() {
               disabled={!cardEnabled}
               className="w-full px-4 py-3 text-sm bg-neutral-50 border border-transparent rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none resize-none transition-all disabled:opacity-50"
             />
+            <div className="mt-4">
+              <p className="text-xs text-neutral-500 mb-2">Быстрые шаблоны</p>
+              <div className="flex flex-wrap gap-2">
+                {CARD_TEMPLATES.map((template) => (
+                  <button
+                    key={template}
+                    type="button"
+                    disabled={!cardEnabled}
+                    onClick={() => applyCardTemplate(template)}
+                    className="px-3 py-1.5 text-xs rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                  >
+                    {template.length > 24 ? `${template.slice(0, 24)}...` : template}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4 rounded-xl border border-neutral-100 bg-neutral-50 p-4">
+              <p className="text-[11px] text-neutral-400 mb-2">Превью открытки</p>
+              <p className="text-sm text-neutral-700 leading-relaxed min-h-[44px]">
+                {cardEnabled
+                  ? cardText.trim() || "Ваше послание появится здесь"
+                  : "Открытка отключена"}
+              </p>
+            </div>
           </section>
         </div>
 

@@ -9,20 +9,41 @@ interface User {
   phone: string;
 }
 
+interface StoredAccount extends User {
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  register: (payload: { name: string; email: string; password: string }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
 }
 
 const STORAGE_KEY = "flora_user";
+const ACCOUNTS_STORAGE_KEY = "flora_accounts";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+
+  const readAccounts = (): StoredAccount[] => {
+    try {
+      const raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as StoredAccount[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const writeAccounts = (accounts: StoredAccount[]) => {
+    localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
+  };
 
   useEffect(() => {
     try {
@@ -58,15 +79,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (email: string, _password: string): Promise<boolean> => {
+    async (email: string, password: string): Promise<boolean> => {
+      const normalizedEmail = email.trim().toLowerCase();
+      const accounts = readAccounts();
+      const acc = accounts.find((a) => a.email.toLowerCase() === normalizedEmail);
+      if (!acc || acc.password !== password) return false;
       const u: User = {
-        id: "1",
-        email,
-        name: email.split("@")[0] || "Пользователь",
-        phone: "+7 (999) 000-00-00",
+        id: acc.id,
+        email: acc.email,
+        name: acc.name,
+        phone: acc.phone,
       };
       persistUser(u);
       return true;
+    },
+    [persistUser]
+  );
+
+  const register = useCallback(
+    async ({
+      name,
+      email,
+      password,
+    }: {
+      name: string;
+      email: string;
+      password: string;
+    }): Promise<{ ok: boolean; error?: string }> => {
+      const normalizedEmail = email.trim().toLowerCase();
+      const accounts = readAccounts();
+      const exists = accounts.some((a) => a.email.toLowerCase() === normalizedEmail);
+      if (exists) return { ok: false, error: "Пользователь с таким email уже существует" };
+
+      const account: StoredAccount = {
+        id: crypto.randomUUID(),
+        name: name.trim() || normalizedEmail.split("@")[0] || "Пользователь",
+        email: normalizedEmail,
+        phone: "+7 (999) 000-00-00",
+        password,
+      };
+      writeAccounts([...accounts, account]);
+      persistUser({
+        id: account.id,
+        name: account.name,
+        email: account.email,
+        phone: account.phone,
+      });
+      return { ok: true };
     },
     [persistUser]
   );
@@ -77,7 +136,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = useCallback(
     (data: Partial<User>) => {
-      if (user) persistUser({ ...user, ...data });
+      if (!user) return;
+      const nextUser = { ...user, ...data };
+      persistUser(nextUser);
+      const accounts = readAccounts();
+      const updated = accounts.map((a) =>
+        a.id === nextUser.id
+          ? { ...a, name: nextUser.name, email: nextUser.email, phone: nextUser.phone }
+          : a
+      );
+      writeAccounts(updated);
     },
     [user, persistUser]
   );
@@ -88,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isLoggedIn: !!user,
         login,
+        register,
         logout,
         updateProfile,
       }}

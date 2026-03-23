@@ -53,7 +53,7 @@ export default function SubscriptionPage() {
               ))}
             </ul>
             <Link
-              href="/checkout"
+              href={`/subscription/checkout?plan=${plan.id}`}
               className={`block w-full py-3 text-sm font-medium rounded-full text-center transition-all ${
                 plan.popular
                   ? "bg-neutral-900 text-white hover:bg-neutral-800"

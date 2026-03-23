@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/shared/context/auth-context";
 import {
@@ -9,6 +10,7 @@ import {
   removeOccasion,
   type Occasion,
 } from "@/shared/lib/occasions-store";
+import { BOUQUETS } from "@/shared/lib/mock-data";
 import { Iconify } from "@/shared/ui/icon";
 
 const OCCASION_TYPES = [
@@ -17,10 +19,34 @@ const OCCASION_TYPES = [
   { id: "other", label: "Другое" },
 ];
 
+type SavedQuizSelection = {
+  savedAt: string;
+  answers: {
+    occasion: string;
+    budget: string;
+    color: string[];
+    size: string;
+  };
+  bouquetIds: string[];
+};
+
+type SavedSubscription = {
+  id: string;
+  planId: string;
+  planName: string;
+  price: number;
+  name: string;
+  phone: string;
+  startDate: string;
+  comment: string;
+  status: "active";
+  createdAt: string;
+};
+
 export default function AccountPage() {
   const router = useRouter();
   const { user, isLoggedIn, logout, updateProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "orders" | "occasions">(
+  const [activeTab, setActiveTab] = useState<"profile" | "orders" | "occasions" | "subscriptions">(
     "profile"
   );
   const [name, setName] = useState("");
@@ -34,6 +60,8 @@ export default function AccountPage() {
     recipientName: "",
     reminderDays: 3,
   });
+  const [lastQuizSelection, setLastQuizSelection] = useState<SavedQuizSelection | null>(null);
+  const [subscriptions, setSubscriptions] = useState<SavedSubscription[]>([]);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -51,6 +79,32 @@ export default function AccountPage() {
   useEffect(() => {
     setOccasions(getOccasions());
   }, [activeTab, showAddOccasion]);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("flora:last-quiz-selection");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as SavedQuizSelection;
+      if (!parsed?.answers || !Array.isArray(parsed?.bouquetIds)) return;
+      setLastQuizSelection(parsed);
+    } catch {
+      setLastQuizSelection(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("flora_subscriptions");
+      if (!raw) {
+        setSubscriptions([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as SavedSubscription[];
+      setSubscriptions(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setSubscriptions([]);
+    }
+  }, [activeTab]);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +130,36 @@ export default function AccountPage() {
   const handleRemoveOccasion = (id: string) => {
     removeOccasion(id);
     setOccasions(getOccasions());
+  };
+
+  const getOccasionLabel = (occasionId: string) => {
+    const map: Record<string, string> = {
+      birthday: "День рождения",
+      date: "Свидание",
+      wedding: "Свадьба",
+      "no-reason": "Без повода",
+    };
+    return map[occasionId] ?? occasionId;
+  };
+
+  const getBudgetLabel = (budgetId: string) => {
+    const map: Record<string, string> = {
+      low: "до 3 000 ₽",
+      mid: "3 000 – 5 000 ₽",
+      high: "5 000 – 10 000 ₽",
+      premium: "от 10 000 ₽",
+    };
+    return map[budgetId] ?? budgetId;
+  };
+
+  const getSizeLabel = (sizeId: string) => {
+    const map: Record<string, string> = {
+      compact: "Компактный",
+      medium: "Средний",
+      luxury: "Роскошный",
+      surprise: "Сюрприз",
+    };
+    return map[sizeId] ?? sizeId;
   };
 
   if (!isLoggedIn) return null;
@@ -119,6 +203,17 @@ export default function AccountPage() {
             }`}
           >
             Мои поводы
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("subscriptions")}
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              activeTab === "subscriptions"
+                ? "bg-neutral-100 text-neutral-900"
+                : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900"
+            }`}
+          >
+            Подписки
           </button>
           <button
             type="button"
@@ -182,6 +277,53 @@ export default function AccountPage() {
                   )}
                 </div>
               </form>
+
+              <div className="mt-10 border-t border-neutral-100 pt-8">
+                <h3 className="text-base font-medium tracking-tight text-neutral-900 mb-3">
+                  Последний подбор
+                </h3>
+                {!lastQuizSelection ? (
+                  <p className="text-sm text-neutral-500">
+                    Пока ничего не сохранено. Пройдите квиз и сохраните подборку.
+                  </p>
+                ) : (
+                  <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4 sm:p-5">
+                    <p className="text-xs text-neutral-400 mb-2">
+                      Сохранено:{" "}
+                      {new Date(lastQuizSelection.savedAt).toLocaleString("ru-RU")}
+                    </p>
+                    <p className="text-sm text-neutral-600 mb-3">
+                      Повод: {getOccasionLabel(lastQuizSelection.answers.occasion)} · Бюджет:{" "}
+                      {getBudgetLabel(lastQuizSelection.answers.budget)} · Формат:{" "}
+                      {getSizeLabel(lastQuizSelection.answers.size)}
+                    </p>
+                    <p className="text-sm text-neutral-500 mb-4">
+                      В подборке:{" "}
+                      {lastQuizSelection.bouquetIds
+                        .slice(0, 3)
+                        .map((id) => BOUQUETS.find((b) => b.id === id)?.name)
+                        .filter(Boolean)
+                        .join(", ")}
+                      {lastQuizSelection.bouquetIds.length > 3 ? " и другие" : ""}.
+                    </p>
+                    <Link
+                      href={`/quiz/results?occasion=${encodeURIComponent(
+                        lastQuizSelection.answers.occasion
+                      )}&budget=${encodeURIComponent(
+                        lastQuizSelection.answers.budget
+                      )}&size=${encodeURIComponent(
+                        lastQuizSelection.answers.size
+                      )}&color=${encodeURIComponent(
+                        lastQuizSelection.answers.color.join(",")
+                      )}`}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
+                    >
+                      Открыть подборку
+                      <Iconify icon="solar:arrow-right-linear" width={16} height={16} />
+                    </Link>
+                  </div>
+                )}
+              </div>
             </>
           )}
           {activeTab === "orders" && (
@@ -328,6 +470,58 @@ export default function AccountPage() {
                     </form>
                   </div>
                 </div>
+              )}
+            </>
+          )}
+          {activeTab === "subscriptions" && (
+            <>
+              <h2 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
+                Мои подписки
+              </h2>
+              {subscriptions.length === 0 ? (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-5">
+                    Пока нет оформленных подписок.
+                  </p>
+                  <Link
+                    href="/subscription"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
+                  >
+                    Оформить подписку
+                    <Iconify icon="solar:arrow-right-linear" width={16} height={16} />
+                  </Link>
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {subscriptions.map((sub) => (
+                    <li
+                      key={sub.id}
+                      className="p-4 sm:p-5 bg-neutral-50 rounded-2xl border border-neutral-100"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                        <p className="font-medium text-neutral-900">{sub.planName}</p>
+                        <span className="text-sm text-neutral-900">
+                          от {sub.price.toLocaleString("ru-RU")} ₽ / раз
+                        </span>
+                      </div>
+                      <p className="text-sm text-neutral-500">
+                        Старт:{" "}
+                        {new Date(sub.startDate).toLocaleDateString("ru-RU", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}{" "}
+                        · получатель: {sub.name}
+                      </p>
+                      {sub.comment && (
+                        <p className="text-sm text-neutral-500 mt-2">
+                          Комментарий: {sub.comment}
+                        </p>
+                      )}
+                      <p className="text-xs text-neutral-400 mt-3">Заявка #{sub.id}</p>
+                    </li>
+                  ))}
+                </ul>
               )}
             </>
           )}

@@ -5,7 +5,7 @@ import { ProductCard } from "@/features/catalog/product-card";
 import { BOUQUETS } from "@/shared/lib/mock-data";
 
 export default function HomePage() {
-  const featuredBouquets = BOUQUETS.slice(0, 6);
+  const featuredBouquets = BOUQUETS.slice(0, 9);
 
   return (
     <main>
@@ -42,7 +42,7 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-rose-50/50 rounded-[2rem] transform rotate-3 scale-105 z-0" />
             <div className="relative z-10 aspect-[4/5] lg:aspect-square overflow-hidden rounded-[2rem] bg-neutral-100 border border-neutral-100/50">
               <Image
-                src="https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=1200&auto=format&fit=crop"
+                src="/bouquets/hero.svg"
                 alt="Букет"
                 fill
                 className="object-cover"

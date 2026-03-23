@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { QUIZ_STEPS } from "@/features/quiz/quiz-steps";
-import { BOUQUETS } from "@/shared/lib/mock-data";
 import { Iconify } from "@/shared/ui/icon";
 
 type QuizAnswers = Record<string, string | string[]>;
@@ -16,7 +14,12 @@ export default function QuizPage() {
   const currentStepData = QUIZ_STEPS[step];
   const isLastStep = step === QUIZ_STEPS.length - 1;
 
-  const selectedValue = answers[currentStepData?.id];
+  const canProceed = useMemo(() => {
+    if (!currentStepData) return false;
+    if (currentStepData.id === "color") return true;
+    const v = answers[currentStepData.id];
+    return typeof v === "string" && v.length > 0;
+  }, [currentStepData, answers]);
 
   const handleSelect = (optionId: string) => {
     if (!currentStepData) return;
@@ -33,8 +36,22 @@ export default function QuizPage() {
   };
 
   const handleNext = () => {
+    if (!canProceed) return;
     if (isLastStep) {
-      router.push("/catalog");
+      const occasion = answers.occasion as string | undefined;
+      const budget = answers.budget as string | undefined;
+      const size = answers.size as string | undefined;
+      if (!occasion || !budget || !size) return;
+      const colorArr = (answers.color as string[] | undefined) ?? [];
+      const color =
+        colorArr.length > 0 ? colorArr.join(",") : "mixed";
+      const q = new URLSearchParams({
+        occasion,
+        budget,
+        size,
+        color,
+      });
+      router.push(`/quiz/results?${q.toString()}`);
       return;
     }
     setStep((s) => s + 1);
@@ -77,10 +94,10 @@ export default function QuizPage() {
           <button
             key={opt.id}
             onClick={() => handleSelect(opt.id)}
-            className={`p-6 rounded-2xl flex flex-col items-center gap-3 text-center transition-all ${
+            className={`p-6 rounded-2xl flex flex-col items-center gap-3 text-center border-2 transition-all ${
               isSelected(opt.id)
-                ? "border-2 border-neutral-900 bg-neutral-50"
-                : "border border-neutral-200 bg-white hover:border-neutral-300"
+                ? "border-neutral-900 bg-neutral-50"
+                : "border-neutral-200 bg-white hover:border-neutral-300"
             }`}
           >
             {opt.icon && (
@@ -92,7 +109,7 @@ export default function QuizPage() {
               />
             )}
             <span
-              className={`text-sm font-medium ${
+              className={`text-sm font-medium whitespace-nowrap ${
                 isSelected(opt.id) ? "text-neutral-900" : "text-neutral-600"
               }`}
             >
@@ -113,8 +130,10 @@ export default function QuizPage() {
           Назад
         </button>
         <button
+          type="button"
           onClick={handleNext}
-          className="px-8 py-3 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all"
+          disabled={!canProceed}
+          className="px-8 py-3 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
           {isLastStep ? "Смотреть подборку" : "Далее"}
         </button>

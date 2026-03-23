@@ -1,0 +1,21 @@
+/** Теги палитры для сопоставления с шагом квиза «цвет» (id как в mock-data) */
+export const BOUQUET_COLOR_TAGS: Record<string, string[]> = {
+  "1": ["pastel", "pink"],
+  "2": ["pastel", "pink"],
+  "3": ["pink", "pastel"],
+  "4": ["pastel", "pink", "mixed"],
+  "5": ["white", "pastel"],
+  "6": ["mixed", "pastel"],
+  "7": ["red"],
+  "8": ["pastel", "mixed"],
+  "9": ["red", "pink"],
+  "10": ["pastel", "pink"],
+  "11": ["mixed", "pastel", "white"],
+  "12": ["mixed", "pastel", "red"],
+  "13": ["white", "pastel"],
+  "14": ["pastel", "white", "pink"],
+  "15": ["red", "pink", "mixed"],
+  "16": ["pink", "pastel", "mixed"],
+  "17": ["pastel", "mixed"],
+  "18": ["pastel", "mixed", "white"],
+};

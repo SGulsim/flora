@@ -51,6 +51,13 @@ export function Header() {
           >
             О нас
           </Link>
+          <Link
+            href="/support"
+            className="text-sm text-rose-600 hover:text-rose-700 font-medium transition-colors inline-flex items-center gap-1.5"
+          >
+            <Iconify icon="solar:heart-linear" width={16} height={16} />
+            Поддержать
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">

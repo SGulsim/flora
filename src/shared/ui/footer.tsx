@@ -61,6 +61,14 @@ export function Footer() {
                   Личный кабинет
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/support"
+                  className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors"
+                >
+                  Поддержать авторов
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { BOUQUETS } from "@/shared/lib/mock-data";
 import { CatalogFilters } from "@/features/catalog/catalog-filters";
 import { ProductCard } from "@/features/catalog/product-card";
@@ -9,11 +10,50 @@ import { Iconify } from "@/shared/ui/icon";
 type SortOption = "popular" | "price-asc" | "price-desc" | "newest";
 
 export default function CatalogPage() {
+  const searchParams = useSearchParams();
   const [occasionFilter, setOccasionFilter] = useState<string[]>([]);
   const [priceMin, setPriceMin] = useState(1000);
   const [priceMax, setPriceMax] = useState(15000);
   const [sort, setSort] = useState<SortOption>("popular");
   const [sortOpen, setSortOpen] = useState(false);
+
+  useEffect(() => {
+    const occasion = searchParams.get("occasion");
+    const budget = searchParams.get("budget");
+    const sortParam = searchParams.get("sort");
+
+    if (occasion) setOccasionFilter([occasion]);
+
+    switch (budget) {
+      case "low":
+        setPriceMin(0);
+        setPriceMax(3000);
+        break;
+      case "mid":
+        setPriceMin(3000);
+        setPriceMax(5000);
+        break;
+      case "high":
+        setPriceMin(5000);
+        setPriceMax(10000);
+        break;
+      case "premium":
+        setPriceMin(10000);
+        setPriceMax(50000);
+        break;
+      default:
+        break;
+    }
+
+    if (
+      sortParam === "popular" ||
+      sortParam === "price-asc" ||
+      sortParam === "price-desc" ||
+      sortParam === "newest"
+    ) {
+      setSort(sortParam);
+    }
+  }, [searchParams]);
 
   const handleOccasionChange = (id: string, checked: boolean) => {
     setOccasionFilter((prev) =>

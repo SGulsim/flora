@@ -1,0 +1,1 @@
+var e=()=>({push:e=>{},replace:e=>{},back:()=>{},forward:()=>{},refresh:()=>{},prefetch:()=>{}}),t=()=>({slug:`utrennij-tuman`}),n=()=>null;export{t as n,e as r,n as t};

@@ -1,0 +1,12 @@
+import{s as e}from"./iframe-DpOIhj7i.js";import{t}from"./react-CuCQT0Tb.js";import{t as n}from"./jsx-runtime-C_z3swJq.js";var r=e(t()),i=n(),a={title:`UI/Checkbox`,parameters:{layout:`centered`},tags:[`autodocs`]};function o({label:e,defaultChecked:t=!1}){let[n,a]=(0,r.useState)(t);return(0,i.jsxs)(`label`,{className:`flex items-center gap-3 cursor-pointer group`,onClick:()=>a(e=>!e),children:[(0,i.jsx)(`div`,{className:`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${n?`bg-neutral-900 border-neutral-900`:`bg-white border-neutral-300 group-hover:border-neutral-500`}`,children:(0,i.jsx)(`svg`,{className:`w-3 h-3 text-white transition-all duration-150 ${n?`opacity-100 scale-100`:`opacity-0 scale-50`}`,fill:`none`,viewBox:`0 0 24 24`,stroke:`currentColor`,strokeWidth:3,children:(0,i.jsx)(`path`,{strokeLinecap:`round`,strokeLinejoin:`round`,d:`M5 13l4 4L19 7`})})}),(0,i.jsx)(`span`,{className:`text-sm transition-colors select-none ${n?`text-neutral-900`:`text-neutral-600 group-hover:text-neutral-900`}`,children:e})]})}var s={render:()=>(0,i.jsx)(o,{label:`Я получатель`})},c={render:()=>(0,i.jsx)(o,{label:`Я получатель`,defaultChecked:!0})},l={render:()=>(0,i.jsxs)(`div`,{className:`space-y-3`,children:[(0,i.jsx)(o,{label:`День рождения`,defaultChecked:!0}),(0,i.jsx)(o,{label:`Свидание`,defaultChecked:!0}),(0,i.jsx)(o,{label:`Свадьба`}),(0,i.jsx)(o,{label:`Без повода`})]})};s.parameters={...s.parameters,docs:{...s.parameters?.docs,source:{originalSource:`{
+  render: () => <CheckboxItem label="Я получатель" />
+}`,...s.parameters?.docs?.source}}},c.parameters={...c.parameters,docs:{...c.parameters?.docs,source:{originalSource:`{
+  render: () => <CheckboxItem label="Я получатель" defaultChecked />
+}`,...c.parameters?.docs?.source}}},l.parameters={...l.parameters,docs:{...l.parameters?.docs,source:{originalSource:`{
+  render: () => <div className="space-y-3">
+      <CheckboxItem label="День рождения" defaultChecked />
+      <CheckboxItem label="Свидание" defaultChecked />
+      <CheckboxItem label="Свадьба" />
+      <CheckboxItem label="Без повода" />
+    </div>
+}`,...l.parameters?.docs?.source}}};var u=[`Unchecked`,`Checked`,`Group`];export{c as Checked,l as Group,s as Unchecked,u as __namedExportsOrder,a as default};

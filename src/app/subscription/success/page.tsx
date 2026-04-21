@@ -1,9 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessInner() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
 
@@ -35,5 +36,15 @@ export default function SubscriptionSuccessPage() {
         </Link>
       </div>
     </main>
+  );
+}
+
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense
+      fallback={<main className="max-w-2xl mx-auto px-4 py-16 text-center" />}
+    >
+      <SubscriptionSuccessInner />
+    </Suspense>
   );
 }

@@ -3,12 +3,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Bouquet } from "@/shared/lib/mock-data";
+import { useFavorites } from "@/shared/context/favorites-context";
+import { Iconify } from "@/shared/ui/icon";
 
 interface ProductCardProps {
   bouquet: Bouquet;
 }
 
 export function ProductCard({ bouquet }: ProductCardProps) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const fav = isFavorite(bouquet.id);
+
+  const handleFav = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(bouquet.id);
+  };
+
   return (
     <Link
       href={`/catalog/${bouquet.slug}`}
@@ -27,6 +38,23 @@ export function ProductCard({ bouquet }: ProductCardProps) {
             Хит
           </div>
         )}
+        <button
+          type="button"
+          onClick={handleFav}
+          aria-label={fav ? "Убрать из избранного" : "В избранное"}
+          aria-pressed={fav}
+          className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all backdrop-blur ${
+            fav
+              ? "bg-rose-500 text-white hover:bg-rose-600"
+              : "bg-white/90 text-neutral-700 hover:bg-white hover:text-rose-500"
+          }`}
+        >
+          <Iconify
+            icon={fav ? "solar:heart-bold" : "solar:heart-linear"}
+            width={18}
+            height={18}
+          />
+        </button>
       </div>
       <div className="flex items-start justify-between gap-2">
         <div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/shared/context/auth-context";
+import { useFavorites } from "@/shared/context/favorites-context";
 import {
   getOccasions,
   addOccasion,
@@ -11,6 +12,7 @@ import {
   type Occasion,
 } from "@/shared/lib/occasions-store";
 import { BOUQUETS } from "@/shared/lib/mock-data";
+import { ProductCard } from "@/features/catalog/product-card";
 import { Iconify } from "@/shared/ui/icon";
 
 const OCCASION_TYPES = [
@@ -46,9 +48,10 @@ type SavedSubscription = {
 export default function AccountPage() {
   const router = useRouter();
   const { user, isLoggedIn, logout, updateProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "orders" | "occasions" | "subscriptions">(
-    "profile"
-  );
+  const { favoriteIds } = useFavorites();
+  const [activeTab, setActiveTab] = useState<
+    "profile" | "orders" | "occasions" | "subscriptions" | "favorites"
+  >("profile");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -214,6 +217,22 @@ export default function AccountPage() {
             }`}
           >
             Подписки
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("favorites")}
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-between ${
+              activeTab === "favorites"
+                ? "bg-neutral-100 text-neutral-900"
+                : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900"
+            }`}
+          >
+            <span>Избранное</span>
+            {favoriteIds.length > 0 && (
+              <span className="text-xs font-medium text-neutral-400">
+                {favoriteIds.length}
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -469,6 +488,37 @@ export default function AccountPage() {
                       </div>
                     </form>
                   </div>
+                </div>
+              )}
+            </>
+          )}
+          {activeTab === "favorites" && (
+            <>
+              <h2 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
+                Избранное
+              </h2>
+              {favoriteIds.length === 0 ? (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-5">
+                    Пока пусто. Отмечайте понравившиеся букеты сердечком — они
+                    появятся здесь.
+                  </p>
+                  <Link
+                    href="/catalog"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
+                  >
+                    Смотреть каталог
+                    <Iconify icon="solar:arrow-right-linear" width={16} height={16} />
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {favoriteIds
+                    .map((id) => BOUQUETS.find((b) => b.id === id))
+                    .filter((b): b is NonNullable<typeof b> => Boolean(b))
+                    .map((bouquet) => (
+                      <ProductCard key={bouquet.id} bouquet={bouquet} />
+                    ))}
                 </div>
               )}
             </>

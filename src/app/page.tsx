@@ -40,10 +40,10 @@ export default function HomePage() {
           </div>
           <div className="flex-1 w-full relative">
             <div className="absolute inset-0 bg-rose-50/50 rounded-[2rem] transform rotate-3 scale-105 z-0" />
-            <div className="relative z-10 aspect-[4/5] lg:aspect-square overflow-hidden rounded-[2rem] bg-neutral-100 border border-neutral-100/50">
+            <div className="relative z-10 aspect-[4/5] lg:aspect-square overflow-hidden rounded-[2rem] bg-neutral-50 border border-neutral-100/50">
               <Image
-                src="/bouquets/hero.svg"
-                alt="Букет"
+                src="/bouquets/hero.jpg"
+                alt="Букет из розовых пионов"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"

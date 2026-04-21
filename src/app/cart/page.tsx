@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/shared/context/cart-context";
 import { ADDONS } from "@/shared/lib/mock-data";
 import { Iconify } from "@/shared/ui/icon";
+import { QuantityStepper } from "@/shared/ui/quantity-stepper";
 
 export default function CartPage() {
   const { items, addons, removeItem, updateQuantity, addAddon, removeAddon, total, itemCount } = useCart();
@@ -72,31 +73,11 @@ export default function CartPage() {
                   </button>
                 </div>
                 <div className="flex justify-between items-center mt-4">
-                  <div className="flex items-center border border-neutral-200 rounded-full bg-white h-9 px-1">
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.bouquetId, item.quantity - 1)
-                      }
-                      className="w-7 h-7 flex items-center justify-center text-neutral-500 hover:text-neutral-900"
-                    >
-                      <Iconify
-                        icon="solar:minus-linear"
-                        width={14}
-                        height={14}
-                      />
-                    </button>
-                    <span className="w-6 text-center text-xs font-medium text-neutral-900">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.bouquetId, item.quantity + 1)
-                      }
-                      className="w-7 h-7 flex items-center justify-center text-neutral-500 hover:text-neutral-900"
-                    >
-                      <Iconify icon="solar:add-linear" width={14} height={14} />
-                    </button>
-                  </div>
+                  <QuantityStepper
+                    size="sm"
+                    value={item.quantity}
+                    onChange={(next) => updateQuantity(item.bouquetId, next)}
+                  />
                   <span className="text-sm font-medium text-neutral-900 tracking-tight">
                     {(item.price * item.quantity).toLocaleString("ru-RU")} ₽
                   </span>

@@ -7,7 +7,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { BOUQUETS } from "@/shared/lib/mock-data";
 import { useCart } from "@/shared/context/cart-context";
+import { useFavorites } from "@/shared/context/favorites-context";
 import { Iconify } from "@/shared/ui/icon";
+import { QuantityStepper } from "@/shared/ui/quantity-stepper";
 
 export default function ProductPage() {
   const params = useParams();
@@ -15,10 +17,13 @@ export default function ProductPage() {
   const slug = params.slug as string;
   const bouquet = BOUQUETS.find((b) => b.slug === slug);
   const { addItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
   if (!bouquet) notFound();
+
+  const fav = isFavorite(bouquet.id);
 
   const images = bouquet.images ?? [bouquet.image];
 
@@ -49,27 +54,29 @@ export default function ProductPage() {
               priority
             />
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            {images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedImage(i)}
-                className={`aspect-square rounded-xl overflow-hidden bg-neutral-100 cursor-pointer transition-all ${
-                  selectedImage === i
-                    ? "border-2 border-neutral-900"
-                    : "border border-transparent hover:border-neutral-200 opacity-60 hover:opacity-100"
-                }`}
-              >
-                <Image
-                  src={img}
-                  alt=""
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
+          {images.length > 1 && (
+            <div className="grid grid-cols-4 gap-4">
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImage(i)}
+                  className={`aspect-square rounded-xl overflow-hidden bg-neutral-100 cursor-pointer transition-all ${
+                    selectedImage === i
+                      ? "border-2 border-neutral-900"
+                      : "border border-transparent hover:border-neutral-200 opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  <Image
+                    src={img}
+                    alt=""
+                    width={200}
+                    height={200}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col">
@@ -107,30 +114,30 @@ export default function ProductPage() {
           </p>
 
           <div className="flex items-center gap-4 mb-8">
-            <div className="flex items-center border border-neutral-200 rounded-full bg-white h-12 px-2">
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors"
-              >
-                <Iconify icon="solar:minus-linear" width={20} height={20} />
-              </button>
-              <span className="w-8 text-center text-sm font-medium text-neutral-900 min-w-[2rem]">
-                {quantity}
-              </span>
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors"
-              >
-                <Iconify icon="solar:add-linear" width={20} height={20} />
-              </button>
-            </div>
+            <QuantityStepper value={quantity} onChange={setQuantity} />
             <button
+              type="button"
               onClick={handleAddToCart}
               className="flex-1 h-12 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all shadow-sm flex items-center justify-center gap-2"
             >
               В корзину <Iconify icon="solar:bag-3-linear" width={18} height={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleFavorite(bouquet.id)}
+              aria-label={fav ? "Убрать из избранного" : "В избранное"}
+              aria-pressed={fav}
+              className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
+                fav
+                  ? "bg-rose-500 border-rose-500 text-white hover:bg-rose-600 hover:border-rose-600"
+                  : "bg-white border-neutral-200 text-neutral-500 hover:text-rose-500 hover:border-rose-300"
+              }`}
+            >
+              <Iconify
+                icon={fav ? "solar:heart-bold" : "solar:heart-linear"}
+                width={20}
+                height={20}
+              />
             </button>
           </div>
 

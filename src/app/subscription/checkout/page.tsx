@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SUBSCRIPTION_PLANS } from "@/shared/lib/mock-data";
@@ -19,7 +19,7 @@ type SavedSubscription = {
   createdAt: string;
 };
 
-export default function SubscriptionCheckoutPage() {
+function SubscriptionCheckoutInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [name, setName] = useState("");
@@ -174,5 +174,17 @@ export default function SubscriptionCheckoutPage() {
         </div>
       </form>
     </main>
+  );
+}
+
+export default function SubscriptionCheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16" />
+      }
+    >
+      <SubscriptionCheckoutInner />
+    </Suspense>
   );
 }

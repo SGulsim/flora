@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 
 export interface CartItem {
   bouquetId: string;
@@ -31,9 +37,51 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null);
 
+const STORAGE_KEY = "flora:cart";
+
+type PersistedCart = {
+  items: CartItem[];
+  addons: CartAddon[];
+};
+
+function readCart(): PersistedCart {
+  if (typeof window === "undefined") return { items: [], addons: [] };
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { items: [], addons: [] };
+    const parsed = JSON.parse(raw) as PersistedCart;
+    return {
+      items: Array.isArray(parsed?.items) ? parsed.items : [],
+      addons: Array.isArray(parsed?.addons) ? parsed.addons : [],
+    };
+  } catch {
+    return { items: [], addons: [] };
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [addons, setAddons] = useState<CartAddon[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const data = readCart();
+    setItems(data.items);
+    setAddons(data.addons);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ items, addons })
+      );
+    } catch {
+      // ignore quota errors
+    }
+  }, [items, addons, hydrated]);
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">, quantity = 1) => {
     setItems((prev) => {

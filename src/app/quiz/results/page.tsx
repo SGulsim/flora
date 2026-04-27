@@ -79,6 +79,30 @@ function QuizResultsContent() {
         {bouquets.map((bouquet) => (
           <ProductCard key={bouquet.id} bouquet={bouquet} />
         ))}
+        {bouquets.length === 0 && (
+          <div className="col-span-full rounded-2xl border border-neutral-100 bg-neutral-50 p-8 text-center">
+            <p className="text-sm text-neutral-600 mb-4">
+              По этим параметрам пока нет идеального совпадения. Измените ответы в
+              квизе или откройте полный каталог.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/quiz"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-neutral-200 text-sm font-medium text-neutral-800 hover:bg-white transition-all"
+              >
+                <Iconify icon="solar:arrow-left-linear" width={16} height={16} />
+                Изменить ответы
+              </Link>
+              <Link
+                href="/catalog"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
+              >
+                В каталог
+                <Iconify icon="solar:arrow-right-linear" width={16} height={16} />
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center border-t border-neutral-100 pt-10">

@@ -1,33 +1,24 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SUBSCRIPTION_PLANS } from "@/shared/lib/mock-data";
 import { formatPhone, isValidPhone } from "@/shared/lib/phone";
-
-type SavedSubscription = {
-  id: string;
-  planId: string;
-  planName: string;
-  price: number;
-  name: string;
-  phone: string;
-  startDate: string;
-  comment: string;
-  status: "active";
-  createdAt: string;
-};
+import { appendSubscription, type SavedSubscription } from "@/shared/lib/subscriptions-store";
+import { useAuth } from "@/shared/context/auth-context";
 
 function SubscriptionCheckoutInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, isLoggedIn, authHydrated } = useAuth();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [startDate, setStartDate] = useState("");
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [authRedirect, setAuthRedirect] = useState(false);
 
   const planId = searchParams.get("plan");
   const plan = useMemo(
@@ -35,11 +26,24 @@ function SubscriptionCheckoutInner() {
     [planId]
   );
 
+  useEffect(() => {
+    if (!authHydrated || !plan) return;
+    if (!isLoggedIn) {
+      setAuthRedirect(true);
+      const returnTo = `/subscription/checkout?plan=${encodeURIComponent(plan.id)}`;
+      router.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    }
+  }, [authHydrated, plan, isLoggedIn, router]);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!plan) {
       setError("Тариф не найден");
+      return;
+    }
+    if (!user?.id) {
+      setError("Войдите в аккаунт, чтобы оформить подписку.");
       return;
     }
     if (!name.trim()) {
@@ -58,6 +62,7 @@ function SubscriptionCheckoutInner() {
     setLoading(true);
     const payload: SavedSubscription = {
       id: crypto.randomUUID(),
+      userId: user.id,
       planId: plan.id,
       planName: plan.name,
       price: plan.price,
@@ -70,15 +75,21 @@ function SubscriptionCheckoutInner() {
     };
 
     try {
-      const raw = localStorage.getItem("flora_subscriptions");
-      const prev = raw ? (JSON.parse(raw) as SavedSubscription[]) : [];
-      localStorage.setItem("flora_subscriptions", JSON.stringify([payload, ...prev]));
+      appendSubscription(payload);
       router.push(`/subscription/success?id=${payload.id}`);
     } catch {
       setError("Не удалось сохранить подписку. Попробуйте ещё раз.");
       setLoading(false);
     }
   };
+
+  if (!authHydrated) {
+    return (
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+        <p className="text-sm text-neutral-500">Загрузка…</p>
+      </main>
+    );
+  }
 
   if (!plan) {
     return (
@@ -95,6 +106,17 @@ function SubscriptionCheckoutInner() {
         >
           К тарифам
         </Link>
+      </main>
+    );
+  }
+
+  if (!isLoggedIn || authRedirect) {
+    return (
+      <main className="max-w-xl mx-auto px-4 py-16 text-center">
+        <p className="text-sm text-neutral-500 mb-2">
+          Войдите в аккаунт, чтобы оформить подписку — заявка сохранится в личном кабинете.
+        </p>
+        <p className="text-xs text-neutral-400">Перенаправляем…</p>
       </main>
     );
   }
@@ -181,7 +203,9 @@ export default function SubscriptionCheckoutPage() {
   return (
     <Suspense
       fallback={
-        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16" />
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+          <p className="text-sm text-neutral-500">Загружаем форму подписки…</p>
+        </main>
       }
     >
       <SubscriptionCheckoutInner />

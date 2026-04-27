@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/shared/context/auth-context";
 import { useFavorites } from "@/shared/context/favorites-context";
 import {
@@ -12,6 +12,10 @@ import {
   type Occasion,
 } from "@/shared/lib/occasions-store";
 import { BOUQUETS } from "@/shared/lib/mock-data";
+import {
+  readSubscriptions,
+  type SavedSubscription,
+} from "@/shared/lib/subscriptions-store";
 import { ProductCard } from "@/features/catalog/product-card";
 import { Iconify } from "@/shared/ui/icon";
 
@@ -32,26 +36,26 @@ type SavedQuizSelection = {
   bouquetIds: string[];
 };
 
-type SavedSubscription = {
-  id: string;
-  planId: string;
-  planName: string;
-  price: number;
-  name: string;
-  phone: string;
-  startDate: string;
-  comment: string;
-  status: "active";
-  createdAt: string;
-};
+type TabId = "profile" | "orders" | "occasions" | "subscriptions" | "favorites";
 
-export default function AccountPage() {
+function parseTab(tab: string | null): TabId {
+  if (
+    tab === "orders" ||
+    tab === "occasions" ||
+    tab === "subscriptions" ||
+    tab === "favorites"
+  ) {
+    return tab;
+  }
+  return "profile";
+}
+
+function AccountPageInner() {
   const router = useRouter();
-  const { user, isLoggedIn, logout, updateProfile } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, isLoggedIn, authHydrated, logout, updateProfile } = useAuth();
   const { favoriteIds } = useFavorites();
-  const [activeTab, setActiveTab] = useState<
-    "profile" | "orders" | "occasions" | "subscriptions" | "favorites"
-  >("profile");
+  const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -68,8 +72,9 @@ export default function AccountPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    if (!authHydrated) return;
     if (!isLoggedIn) {
-      router.replace("/login");
+      router.replace("/login?returnTo=/account");
       return;
     }
     if (user) {
@@ -77,7 +82,21 @@ export default function AccountPage() {
       setEmail(user.email);
       setPhone(user.phone);
     }
-  }, [isLoggedIn, user, router]);
+  }, [authHydrated, isLoggedIn, user, router]);
+
+  useEffect(() => {
+    const tab = parseTab(searchParams.get("tab"));
+    setActiveTab(tab);
+  }, [searchParams]);
+
+  const setTab = (tab: TabId) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "profile") params.delete("tab");
+    else params.set("tab", tab);
+    const q = params.toString();
+    router.replace(q ? `/account?${q}` : "/account", { scroll: false });
+  };
 
   useEffect(() => {
     setOccasions(getOccasions());
@@ -96,18 +115,12 @@ export default function AccountPage() {
   }, []);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem("flora_subscriptions");
-      if (!raw) {
-        setSubscriptions([]);
-        return;
-      }
-      const parsed = JSON.parse(raw) as SavedSubscription[];
-      setSubscriptions(Array.isArray(parsed) ? parsed : []);
-    } catch {
+    if (!user?.id) {
       setSubscriptions([]);
+      return;
     }
-  }, [activeTab]);
+    setSubscriptions(readSubscriptions(user.id));
+  }, [activeTab, user?.id]);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +178,13 @@ export default function AccountPage() {
     return map[sizeId] ?? sizeId;
   };
 
-  if (!isLoggedIn) return null;
+  if (!authHydrated || !isLoggedIn) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <p className="text-sm text-neutral-500">Проверяем аккаунт…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
@@ -176,7 +195,7 @@ export default function AccountPage() {
         <aside className="w-full md:w-56 flex-shrink-0 space-y-1">
           <button
             type="button"
-            onClick={() => setActiveTab("profile")}
+            onClick={() => setTab("profile")}
             className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               activeTab === "profile"
                 ? "bg-neutral-100 text-neutral-900"
@@ -187,7 +206,7 @@ export default function AccountPage() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("orders")}
+            onClick={() => setTab("orders")}
             className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               activeTab === "orders"
                 ? "bg-neutral-100 text-neutral-900"
@@ -198,7 +217,7 @@ export default function AccountPage() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("occasions")}
+            onClick={() => setTab("occasions")}
             className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               activeTab === "occasions"
                 ? "bg-neutral-100 text-neutral-900"
@@ -209,7 +228,7 @@ export default function AccountPage() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("subscriptions")}
+            onClick={() => setTab("subscriptions")}
             className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               activeTab === "subscriptions"
                 ? "bg-neutral-100 text-neutral-900"
@@ -220,7 +239,7 @@ export default function AccountPage() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("favorites")}
+            onClick={() => setTab("favorites")}
             className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-between ${
               activeTab === "favorites"
                 ? "bg-neutral-100 text-neutral-900"
@@ -582,13 +601,38 @@ export default function AccountPage() {
 }
 
 function OrdersTab() {
-  const [orders, setOrders] = useState<{ id: string; total: number; date: string; status: string }[]>([]);
+  const [orders, setOrders] = useState<
+    { id: string; total: number; date: string; status: string }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
     fetch("/api/orders")
-      .then((r) => r.json())
-      .then((data) => setOrders(data.orders ?? []))
-      .catch(() => setOrders([]));
+      .then(async (r) => {
+        if (!r.ok) throw new Error("bad_status");
+        return r.json();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setOrders(Array.isArray(data.orders) ? data.orders : []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError("Не удалось загрузить заказы. Проверьте подключение к серверу.");
+          setOrders([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -596,9 +640,25 @@ function OrdersTab() {
       <h2 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
         История заказов
       </h2>
-      {orders.length === 0 ? (
+      {loading && (
+        <p className="text-sm text-neutral-500">Загружаем заказы…</p>
+      )}
+      {!loading && error && (
+        <div className="rounded-xl border border-red-100 bg-red-50/80 p-4 text-sm text-red-700">
+          {error}
+          <button
+            type="button"
+            className="mt-3 block text-sm font-medium underline"
+            onClick={() => window.location.reload()}
+          >
+            Обновить страницу
+          </button>
+        </div>
+      )}
+      {!loading && !error && orders.length === 0 && (
         <p className="text-sm text-neutral-500">Пока заказов нет</p>
-      ) : (
+      )}
+      {!loading && !error && orders.length > 0 && (
         <ul className="space-y-4">
           {orders.map((o) => (
             <li
@@ -617,5 +677,19 @@ function OrdersTab() {
         </ul>
       )}
     </>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <p className="text-sm text-neutral-500">Загрузка личного кабинета…</p>
+        </main>
+      }
+    >
+      <AccountPageInner />
+    </Suspense>
   );
 }

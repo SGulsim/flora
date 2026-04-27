@@ -1,18 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/shared/context/auth-context";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const returnTo = searchParams.get("returnTo");
+  const safeReturn =
+    returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : "/account";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +44,7 @@ export default function RegisterPage() {
       setError(res.error ?? "Не удалось зарегистрироваться");
       return;
     }
-    router.push("/account");
+    router.push(safeReturn);
   };
 
   return (
@@ -90,10 +97,31 @@ export default function RegisterPage() {
       </form>
       <p className="mt-6 text-center text-sm text-neutral-500">
         Уже есть аккаунт?{" "}
-        <Link href="/login" className="text-neutral-900 underline">
+        <Link
+          href={
+            returnTo
+              ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+              : "/login"
+          }
+          className="text-neutral-900 underline"
+        >
           Войти
         </Link>
       </p>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="max-w-md mx-auto px-4 py-16">
+          <p className="text-sm text-neutral-500">Загрузка…</p>
+        </main>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

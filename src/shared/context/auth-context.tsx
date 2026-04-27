@@ -16,6 +16,8 @@ interface StoredAccount extends User {
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
+  /** true после чтения сессии из localStorage на клиенте */
+  authHydrated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (payload: { name: string; email: string; password: string }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
@@ -29,6 +31,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [authHydrated, setAuthHydrated] = useState(false);
 
   const readAccounts = (): StoredAccount[] => {
     try {
@@ -55,6 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       setUser(null);
+    } finally {
+      setAuthHydrated(true);
     }
   }, []);
 
@@ -155,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         isLoggedIn: !!user,
+        authHydrated,
         login,
         register,
         logout,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -21,7 +20,24 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  if (!bouquet) notFound();
+  if (!bouquet) {
+    return (
+      <main className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <h1 className="text-2xl font-medium tracking-tight text-neutral-900 mb-3">
+          Букет не найден
+        </h1>
+        <p className="text-sm text-neutral-500 mb-8">
+          Такого товара нет в каталоге. Выберите другой букет.
+        </p>
+        <Link
+          href="/catalog"
+          className="inline-flex px-6 py-3 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
+        >
+          В каталог
+        </Link>
+      </main>
+    );
+  }
 
   const fav = isFavorite(bouquet.id);
 
@@ -174,7 +190,7 @@ export default function ProductPage() {
               </summary>
               <div className="text-sm text-neutral-500 mt-4 leading-relaxed">
                 Бесплатная доставка по городу от 3000 ₽. Время доставки от 60
-                минут после сборки. Оплата картой, SBP или наличными курьеру.
+                минут после сборки. Оплата картой, СБП или наличными курьеру.
               </div>
             </details>
           </div>

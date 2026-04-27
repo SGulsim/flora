@@ -162,6 +162,9 @@ export default function CartPage() {
                 {total.toLocaleString("ru-RU")} ₽
               </span>
             </div>
+            <p className="text-xs text-neutral-500 mb-3 text-center">
+              Оформление доступно после входа в аккаунт — заказ появится в истории.
+            </p>
             <Link
               href="/checkout"
               className="block w-full py-3.5 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all shadow-sm text-center"

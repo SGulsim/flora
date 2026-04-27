@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/shared/context/cart-context";
+import { useAuth } from "@/shared/context/auth-context";
 import { formatPhone, isValidPhone } from "@/shared/lib/phone";
-import { Iconify } from "@/shared/ui/icon";
 
 const DELIVERY_SLOTS = [
   { id: "soon", label: "Ближайшее", time: "от 60 мин" },
@@ -22,8 +23,9 @@ const CARD_TEMPLATES = [
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { isLoggedIn, authHydrated } = useAuth();
   const { items, total } = useCart();
-  const [step, setStep] = useState(1);
+  const [redirecting, setRedirecting] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState("today");
   const [deliverySlot, setDeliverySlot] = useState("soon");
   const [cardEnabled, setCardEnabled] = useState(true);
@@ -32,10 +34,21 @@ export default function CheckoutPage() {
   const [phoneValue, setPhoneValue] = useState("");
   const [phoneError, setPhoneError] = useState("");
 
-  if (items.length === 0) {
-    router.replace("/cart");
-    return null;
-  }
+  useEffect(() => {
+    if (!authHydrated) return;
+    if (!isLoggedIn) {
+      setRedirecting(true);
+      router.replace("/login?returnTo=/checkout");
+    }
+  }, [authHydrated, isLoggedIn, router]);
+
+  useEffect(() => {
+    if (!authHydrated || !isLoggedIn) return;
+    if (items.length === 0) {
+      setRedirecting(true);
+      router.replace("/cart");
+    }
+  }, [authHydrated, isLoggedIn, items.length, router]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
@@ -77,27 +90,49 @@ export default function CheckoutPage() {
     }
   };
 
+  if (!authHydrated) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-16 text-center">
+        <p className="text-sm text-neutral-500">Загрузка…</p>
+      </main>
+    );
+  }
+
+  if (!isLoggedIn || redirecting) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-16 text-center">
+        <p className="text-sm text-neutral-500 mb-4">
+          Для оформления заказа войдите в аккаунт — так заказ сохранится в истории.
+        </p>
+        <p className="text-xs text-neutral-400">Перенаправляем…</p>
+      </main>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-16 text-center">
+        <p className="text-sm text-neutral-500 mb-4">Корзина пуста.</p>
+        <p className="text-xs text-neutral-400">Перенаправляем в каталог…</p>
+      </main>
+    );
+  }
+
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
-      <h1 className="text-2xl font-medium tracking-tight text-neutral-900 mb-8">
+      <h1 className="text-2xl font-medium tracking-tight text-neutral-900 mb-2">
         Оформление заказа
       </h1>
+      <p className="text-sm text-neutral-500 mb-8">
+        Доставка, открытка и оплата — на одном экране.
+      </p>
 
       <div className="flex flex-col lg:flex-row gap-12">
         <div className="flex-1 space-y-8">
           <section className="bg-white p-6 sm:p-8 rounded-[2rem] border border-neutral-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <span
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                  step >= 1 ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-400"
-                }`}
-              >
-                1
-              </span>
-              <h2 className="text-lg font-medium tracking-tight text-neutral-900">
-                Получатель и адрес
-              </h2>
-            </div>
+            <h2 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
+              Получатель и адрес
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-xs text-neutral-500 mb-1.5 ml-1">
@@ -181,18 +216,14 @@ export default function CheckoutPage() {
           </section>
 
           <section className="bg-white p-6 sm:p-8 rounded-[2rem] border border-neutral-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="w-6 h-6 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center text-xs font-medium">
-                2
-              </span>
-              <h2 className="text-lg font-medium tracking-tight text-neutral-900">
-                Дата и время
-              </h2>
-            </div>
+            <h2 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
+              Дата и время
+            </h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {(["today", "tomorrow", "pick"] as const).map((d) => (
                 <button
                   key={d}
+                  type="button"
                   onClick={() => setDeliveryDate(d)}
                   className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
                     deliveryDate === d
@@ -208,6 +239,7 @@ export default function CheckoutPage() {
               {DELIVERY_SLOTS.map((slot) => (
                 <button
                   key={slot.id}
+                  type="button"
                   onClick={() => setDeliverySlot(slot.id)}
                   className={`px-3 py-2 text-xs font-medium rounded-xl text-center transition-colors ${
                     deliverySlot === slot.id
@@ -231,14 +263,9 @@ export default function CheckoutPage() {
 
           <section className="bg-white p-6 sm:p-8 rounded-[2rem] border border-neutral-100 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center text-xs font-medium">
-                  3
-                </span>
-                <h2 className="text-lg font-medium tracking-tight text-neutral-900">
-                  Бесплатная открытка
-                </h2>
-              </div>
+              <h2 className="text-lg font-medium tracking-tight text-neutral-900">
+                Бесплатная открытка
+              </h2>
               <button
                 type="button"
                 role="switch"
@@ -278,7 +305,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             <div className="mt-4 rounded-xl border border-neutral-100 bg-neutral-50 p-4">
-              <p className="text-[11px] text-neutral-400 mb-2">Превью открытки</p>
+              <p className="text-xs text-neutral-500 mb-2">Превью открытки</p>
               <p className="text-sm text-neutral-700 leading-relaxed min-h-[44px]">
                 {cardEnabled
                   ? cardText.trim() || "Ваше послание появится здесь"
@@ -294,11 +321,7 @@ export default function CheckoutPage() {
               Оплата
             </h3>
             <div className="space-y-3 mb-6">
-              <label
-                className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer group custom-radio ${
-                  payment === "card" ? "border-neutral-200" : "border-neutral-200"
-                }`}
-              >
+              <label className="flex items-center gap-3 p-3 border border-neutral-200 rounded-xl cursor-pointer group custom-radio">
                 <input
                   type="radio"
                   name="payment"
@@ -333,7 +356,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <span className="text-sm font-medium text-neutral-900 flex-1">
-                  Система быстрых платежей
+                  СБП (Система быстрых платежей)
                 </span>
               </label>
             </div>
@@ -348,16 +371,18 @@ export default function CheckoutPage() {
             </div>
 
             <button
+              type="button"
               onClick={handleSubmit}
               className="w-full py-3.5 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all shadow-sm mb-3"
             >
               Оплатить
             </button>
-            <p className="text-[10px] text-neutral-400 text-center leading-relaxed px-2">
+            <p className="text-xs text-neutral-500 text-center leading-relaxed px-2">
               Нажимая кнопку, вы соглашаетесь с{" "}
-              <a href="#" className="underline hover:text-neutral-600">
+              <Link href="/about" className="underline hover:text-neutral-800">
                 условиями оферты
-              </a>
+              </Link>
+              .
             </p>
           </div>
         </div>

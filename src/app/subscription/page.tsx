@@ -27,7 +27,7 @@ export default function SubscriptionPage() {
             }`}
           >
             {plan.popular && (
-              <div className="absolute top-0 right-8 -translate-y-1/2 bg-neutral-900 text-white text-[10px] font-medium uppercase tracking-wider px-3 py-1 rounded-full">
+              <div className="absolute top-0 right-8 -translate-y-1/2 bg-neutral-900 text-white text-xs font-medium uppercase tracking-wider px-3 py-1 rounded-full">
                 Популярно
               </div>
             )}
@@ -60,7 +60,7 @@ export default function SubscriptionPage() {
                   : "bg-neutral-50 text-neutral-900 hover:bg-neutral-100"
               }`}
             >
-              {plan.popular ? "Оформить" : "Выбрать"}
+              Оформить подписку
             </Link>
           </div>
         ))}

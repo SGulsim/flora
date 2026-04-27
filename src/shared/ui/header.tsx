@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/shared/context/cart-context";
 import { useAuth } from "@/shared/context/auth-context";
 import { useFavorites } from "@/shared/context/favorites-context";
@@ -14,11 +14,16 @@ const NAV_LINKS = [
   { href: "/about", label: "О нас" },
 ];
 
+const FAVORITES_PATH = "/account?tab=favorites";
+const FAVORITES_LOGIN = `/login?returnTo=${encodeURIComponent(FAVORITES_PATH)}`;
+
 export function Header() {
   const { itemCount } = useCart();
   const { isLoggedIn } = useAuth();
   const { favoriteCount } = useFavorites();
   const [menuOpen, setMenuOpen] = useState(false);
+  const openMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -37,15 +42,33 @@ export function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const id = window.setTimeout(() => {
+      const el = mobileNavRef.current?.querySelector<HTMLElement>(
+        "a[href], button[type='button']"
+      );
+      el?.focus();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [menuOpen]);
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+    window.setTimeout(() => openMenuButtonRef.current?.focus({ preventScroll: true }), 0);
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-neutral-100/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <button
+          ref={openMenuButtonRef}
           type="button"
           onClick={() => setMenuOpen(true)}
           className="lg:hidden p-2 -ml-2 text-neutral-500 hover:text-neutral-900 transition-colors"
           aria-label="Открыть меню"
           aria-expanded={menuOpen}
+          aria-controls="mobile-navigation"
         >
           <Iconify icon="solar:hamburger-menu-linear" width={24} height={24} />
         </button>
@@ -57,7 +80,7 @@ export function Header() {
           FLORA
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-8" aria-label="Основное меню">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -72,20 +95,20 @@ export function Header() {
             className="text-sm text-rose-600 hover:text-rose-700 font-medium transition-colors inline-flex items-center gap-1.5"
           >
             <Iconify icon="solar:heart-linear" width={16} height={16} />
-            Поддержать
+            Поддержать авторов
           </Link>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
           <Link
-            href={isLoggedIn ? "/account" : "/login"}
+            href={isLoggedIn ? FAVORITES_PATH : FAVORITES_LOGIN}
             className="relative hidden sm:flex p-2 text-neutral-500 hover:text-rose-500 transition-colors"
             aria-label={isLoggedIn ? "Избранное" : "Войти и открыть избранное"}
             title="Избранное"
           >
             <Iconify icon="solar:heart-linear" width={22} height={22} />
             {favoriteCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-rose-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center border-2 border-white">
+              <span className="absolute top-1 right-1 min-w-[18px] h-4 px-1 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center border-2 border-white">
                 {favoriteCount}
               </span>
             )}
@@ -117,17 +140,27 @@ export function Header() {
           <button
             type="button"
             aria-label="Закрыть меню"
-            onClick={() => setMenuOpen(false)}
+            onClick={closeMenu}
             className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-[82%] max-w-sm bg-white shadow-xl flex flex-col">
+          <aside
+            ref={mobileNavRef}
+            id="mobile-navigation"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-nav-title"
+            className="absolute left-0 top-0 bottom-0 w-[82%] max-w-sm bg-white shadow-xl flex flex-col outline-none"
+          >
             <div className="flex items-center justify-between h-16 px-5 border-b border-neutral-100">
-              <span className="text-xl font-semibold tracking-tighter text-neutral-900 uppercase">
+              <span
+                id="mobile-nav-title"
+                className="text-xl font-semibold tracking-tighter text-neutral-900 uppercase"
+              >
                 FLORA
               </span>
               <button
                 type="button"
-                onClick={() => setMenuOpen(false)}
+                onClick={closeMenu}
                 className="p-2 -mr-2 text-neutral-500 hover:text-neutral-900"
                 aria-label="Закрыть меню"
               >
@@ -135,13 +168,13 @@ export function Header() {
               </button>
             </div>
 
-            <nav className="flex-1 overflow-y-auto py-4 px-3">
+            <nav className="flex-1 overflow-y-auto py-4 px-3" aria-label="Мобильное меню">
               <ul className="space-y-1">
                 {NAV_LINKS.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      onClick={() => setMenuOpen(false)}
+                      onClick={closeMenu}
                       className="block px-3 py-3 rounded-xl text-base font-medium text-neutral-800 hover:bg-neutral-50 transition-colors"
                     >
                       {link.label}
@@ -150,8 +183,8 @@ export function Header() {
                 ))}
                 <li>
                   <Link
-                    href={isLoggedIn ? "/account" : "/login"}
-                    onClick={() => setMenuOpen(false)}
+                    href={isLoggedIn ? FAVORITES_PATH : FAVORITES_LOGIN}
+                    onClick={closeMenu}
                     className="flex items-center justify-between px-3 py-3 rounded-xl text-base font-medium text-neutral-800 hover:bg-neutral-50 transition-colors"
                   >
                     <span className="inline-flex items-center gap-2">
@@ -159,7 +192,7 @@ export function Header() {
                       Избранное
                     </span>
                     {favoriteCount > 0 && (
-                      <span className="min-w-[20px] h-5 px-1.5 bg-rose-500 text-white text-[11px] font-medium rounded-full flex items-center justify-center">
+                      <span className="min-w-[22px] h-5 px-1.5 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
                         {favoriteCount}
                       </span>
                     )}
@@ -168,7 +201,7 @@ export function Header() {
                 <li>
                   <Link
                     href={isLoggedIn ? "/account" : "/login"}
-                    onClick={() => setMenuOpen(false)}
+                    onClick={closeMenu}
                     className="flex items-center gap-2 px-3 py-3 rounded-xl text-base font-medium text-neutral-800 hover:bg-neutral-50 transition-colors"
                   >
                     <Iconify icon="solar:user-circle-linear" width={20} height={20} />
@@ -180,7 +213,7 @@ export function Header() {
               <div className="mt-4 pt-4 border-t border-neutral-100">
                 <Link
                   href="/support"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={closeMenu}
                   className="flex items-center gap-2 px-3 py-3 rounded-xl text-base font-medium text-rose-600 hover:bg-rose-50 transition-colors"
                 >
                   <Iconify icon="solar:heart-linear" width={20} height={20} />
@@ -192,7 +225,7 @@ export function Header() {
             <div className="p-4 border-t border-neutral-100">
               <Link
                 href="/catalog"
-                onClick={() => setMenuOpen(false)}
+                onClick={closeMenu}
                 className="block w-full text-center py-3 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-colors"
               >
                 В каталог

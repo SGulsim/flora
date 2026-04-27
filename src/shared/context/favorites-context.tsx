@@ -8,8 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-
-const STORAGE_KEY = "flora:favorites";
+import { useAuth } from "@/shared/context/auth-context";
 
 interface FavoritesContextType {
   favoriteIds: string[];
@@ -23,11 +22,31 @@ interface FavoritesContextType {
 
 const FavoritesContext = createContext<FavoritesContextType | null>(null);
 
-function readFavorites(): string[] {
+const LEGACY_KEY = "flora:favorites";
+const GUEST_KEY = "flora:favorites:guest";
+
+function storageKeyForUser(userId: string | null | undefined): string {
+  if (userId) return `flora:favorites:${userId}`;
+  return GUEST_KEY;
+}
+
+function readFavoritesFromKey(key: string): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    const raw = window.localStorage.getItem(key);
+    if (!raw) {
+      if (key === GUEST_KEY) {
+        const legacy = window.localStorage.getItem(LEGACY_KEY);
+        if (!legacy) return [];
+        const parsed = JSON.parse(legacy);
+        if (!Array.isArray(parsed)) return [];
+        const ids = parsed.filter((x): x is string => typeof x === "string");
+        window.localStorage.setItem(GUEST_KEY, JSON.stringify(ids));
+        window.localStorage.removeItem(LEGACY_KEY);
+        return ids;
+      }
+      return [];
+    }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed.filter((x): x is string => typeof x === "string");
@@ -37,22 +56,43 @@ function readFavorites(): string[] {
 }
 
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
+  const userId = user?.id ?? null;
+
   useEffect(() => {
-    setFavoriteIds(readFavorites());
+    const key = storageKeyForUser(userId);
+    setFavoriteIds(readFavoritesFromKey(key));
     setHydrated(true);
-  }, []);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!hydrated || !userId) return;
+    try {
+      const guest = readFavoritesFromKey(GUEST_KEY);
+      if (guest.length === 0) return;
+      const userKey = storageKeyForUser(userId);
+      const existing = readFavoritesFromKey(userKey);
+      const merged = [...new Set([...existing, ...guest])];
+      window.localStorage.setItem(userKey, JSON.stringify(merged));
+      window.localStorage.removeItem(GUEST_KEY);
+      setFavoriteIds(merged);
+    } catch {
+      // ignore
+    }
+  }, [userId, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
+    const key = storageKeyForUser(userId);
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(favoriteIds));
+      window.localStorage.setItem(key, JSON.stringify(favoriteIds));
     } catch {
       // ignore quota / privacy-mode errors
     }
-  }, [favoriteIds, hydrated]);
+  }, [favoriteIds, hydrated, userId]);
 
   const isFavorite = useCallback(
     (id: string) => favoriteIds.includes(id),

@@ -23,7 +23,7 @@ function SubscriptionSuccessInner() {
       )}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
-          href="/account"
+          href="/account?tab=subscriptions"
           className="px-6 py-3 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
         >
           В личный кабинет
@@ -42,7 +42,11 @@ function SubscriptionSuccessInner() {
 export default function SubscriptionSuccessPage() {
   return (
     <Suspense
-      fallback={<main className="max-w-2xl mx-auto px-4 py-16 text-center" />}
+      fallback={
+        <main className="max-w-2xl mx-auto px-4 py-16 text-center">
+          <p className="text-sm text-neutral-500">Загрузка…</p>
+        </main>
+      }
     >
       <SubscriptionSuccessInner />
     </Suspense>

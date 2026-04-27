@@ -1,24 +1,44 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { BOUQUETS } from "@/shared/lib/mock-data";
+import { useEffect, useRef, useState } from "react";
+import { BOUQUETS, OCCASIONS } from "@/shared/lib/mock-data";
 import { useCart } from "@/shared/context/cart-context";
 import { useFavorites } from "@/shared/context/favorites-context";
 import { Iconify } from "@/shared/ui/icon";
 import { QuantityStepper } from "@/shared/ui/quantity-stepper";
+import { addRecentlyViewed } from "@/shared/lib/recently-viewed";
+import { RecentlyViewedStrip } from "@/features/catalog/recently-viewed-strip";
 
 export default function ProductPage() {
   const params = useParams();
-  const router = useRouter();
   const slug = params.slug as string;
   const bouquet = BOUQUETS.find((b) => b.slug === slug);
   const { addItem } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const [viewersCount] = useState(() => Math.floor(Math.random() * 6 + 2));
+  const addToCartRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (slug) addRecentlyViewed(slug);
+  }, [slug]);
+
+  useEffect(() => {
+    const el = addToCartRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "-80px 0px 0px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [bouquet]);
 
   if (!bouquet) {
     return (
@@ -43,6 +63,9 @@ export default function ProductPage() {
 
   const images = bouquet.images ?? [bouquet.image];
 
+  const primaryOccasion = bouquet.occasion[0];
+  const occasionLabel = OCCASIONS.find((o) => o.id === primaryOccasion)?.label ?? "Авторские";
+
   const handleAddToCart = () => {
     addItem(
       {
@@ -53,7 +76,8 @@ export default function ProductPage() {
       },
       quantity
     );
-    router.push("/cart");
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2500);
   };
 
   return (
@@ -71,7 +95,7 @@ export default function ProductPage() {
             />
           </div>
           {images.length > 1 && (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4">
               {images.map((img, i) => (
                 <button
                   key={i}
@@ -96,16 +120,21 @@ export default function ProductPage() {
         </div>
 
         <div className="flex flex-col">
-          <nav className="flex text-xs text-neutral-400 mb-6 gap-2">
+          <nav className="flex text-xs text-neutral-400 mb-6 gap-2 flex-wrap">
             <Link
               href="/catalog"
               className="hover:text-neutral-900 transition-colors"
             >
               Каталог
             </Link>
-            <span> / </span>
-            <span>Авторские</span>
-            <span> / </span>
+            <span>/</span>
+            <Link
+              href={`/catalog?occasion=${primaryOccasion}`}
+              className="hover:text-neutral-900 transition-colors"
+            >
+              {occasionLabel}
+            </Link>
+            <span>/</span>
             <span className="text-neutral-900">{bouquet.name}</span>
           </nav>
 
@@ -125,18 +154,46 @@ export default function ProductPage() {
             </div>
           </div>
 
+          {/* Social proof */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <span className="relative flex w-2 h-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              </span>
+              {viewersCount} человек смотрят сейчас
+            </span>
+            {bouquet.stock !== undefined && bouquet.stock <= 5 && (
+              <span className="text-xs font-medium px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full">
+                Осталось {bouquet.stock} шт
+              </span>
+            )}
+          </div>
+
           <p className="text-sm text-neutral-500 leading-relaxed mb-8">
             {bouquet.description}
           </p>
 
-          <div className="flex items-center gap-4 mb-8">
+          <div ref={addToCartRef} className="flex items-center gap-4 mb-8">
             <QuantityStepper value={quantity} onChange={setQuantity} />
             <button
               type="button"
               onClick={handleAddToCart}
-              className="flex-1 h-12 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-all shadow-sm flex items-center justify-center gap-2"
+              className={`flex-1 h-12 text-sm font-medium rounded-full transition-all shadow-sm flex items-center justify-center gap-2 ${
+                addedToCart
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-neutral-900 text-white hover:bg-neutral-800"
+              }`}
             >
-              В корзину <Iconify icon="solar:bag-3-linear" width={18} height={18} />
+              {addedToCart ? (
+                <>
+                  Добавлено <Iconify icon="solar:check-circle-bold" width={18} height={18} />
+                </>
+              ) : (
+                <>
+                  В корзину <Iconify icon="solar:bag-3-linear" width={18} height={18} />
+                </>
+              )}
             </button>
             <button
               type="button"
@@ -194,6 +251,33 @@ export default function ProductPage() {
               </div>
             </details>
           </div>
+        </div>
+      </div>
+      {/* Recently viewed */}
+      <RecentlyViewedStrip exclude={slug} />
+
+      {/* Sticky mobile CTA */}
+      <div
+        className={`sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-neutral-100 px-4 py-3 pb-safe transition-transform duration-300 ${
+          stickyVisible ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-neutral-900 truncate">{bouquet.name}</p>
+            <p className="text-xs text-neutral-500">{bouquet.price.toLocaleString("ru-RU")} ₽</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all flex-shrink-0 ${
+              addedToCart
+                ? "bg-green-600 text-white"
+                : "bg-neutral-900 text-white hover:bg-neutral-800"
+            }`}
+          >
+            {addedToCart ? "Добавлено ✓" : "В корзину"}
+          </button>
         </div>
       </div>
     </main>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, Suspense, useState } from "react";
+import { useMemo, Suspense, useState, useCallback } from "react";
+import { useAuth } from "@/shared/context/auth-context";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/features/catalog/product-card";
@@ -12,6 +13,7 @@ import { Iconify } from "@/shared/ui/icon";
 
 function QuizResultsContent() {
   const searchParams = useSearchParams();
+  const { isLoggedIn } = useAuth();
   const [saved, setSaved] = useState(false);
   const answers = useMemo(
     () => parseQuizSearchParams(searchParams),
@@ -32,16 +34,17 @@ function QuizResultsContent() {
     return `/catalog?${q.toString()}`;
   }, [answers]);
 
-  const handleSaveSelection = () => {
+  const handleSaveSelection = useCallback(async () => {
     if (!answers) return;
-    const payload = {
-      savedAt: new Date().toISOString(),
-      answers,
-      bouquetIds: bouquets.map((b) => b.id),
-    };
-    window.localStorage.setItem("flora:last-quiz-selection", JSON.stringify(payload));
+    if (isLoggedIn) {
+      await fetch("/api/quiz-collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers, bouquetIds: bouquets.map((b) => b.id) }),
+      }).catch(() => {});
+    }
     setSaved(true);
-  };
+  }, [answers, bouquets, isLoggedIn]);
 
   if (!answers) {
     return (

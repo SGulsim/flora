@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { CartProvider } from "@/shared/context/cart-context";
 import { AuthProvider } from "@/shared/context/auth-context";
 import { FavoritesProvider } from "@/shared/context/favorites-context";
+import { ToastProvider } from "@/shared/ui/toast";
+import { CartFlyout } from "@/shared/ui/cart-flyout";
 import { Header } from "@/shared/ui/header";
 import { Footer } from "@/shared/ui/footer";
 import "./globals.css";
@@ -20,15 +22,18 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className="bg-neutral-50 text-neutral-800 selection:bg-rose-100 selection:text-rose-900 flex flex-col min-h-screen">
-        <AuthProvider>
-          <FavoritesProvider>
-            <CartProvider>
-              <Header />
-              <div className="flex-grow">{children}</div>
-              <Footer />
-            </CartProvider>
-          </FavoritesProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <FavoritesProvider>
+              <CartProvider>
+                <Header />
+                <div className="flex-grow">{children}</div>
+                <Footer />
+                <CartFlyout />
+              </CartProvider>
+            </FavoritesProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

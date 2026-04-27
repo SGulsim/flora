@@ -40,9 +40,9 @@ export function CatalogFilters({
                       onOccasionChange(occ.id, e.target.checked)
                     }
                   />
-                  <div className="w-4 h-4 rounded border border-neutral-300 bg-white flex items-center justify-center transition-colors group-hover:border-neutral-400">
+                  <div className="w-5 h-5 rounded border border-neutral-300 bg-white flex items-center justify-center transition-colors group-hover:border-neutral-400">
                     <svg
-                      className="w-2.5 h-2.5 text-white opacity-0 transform scale-50 transition-all"
+                      className="w-3.5 h-3.5 text-white opacity-0 transition-opacity"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

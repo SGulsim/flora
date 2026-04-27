@@ -6,6 +6,7 @@ import { useCart } from "@/shared/context/cart-context";
 import { ADDONS } from "@/shared/lib/mock-data";
 import { Iconify } from "@/shared/ui/icon";
 import { QuantityStepper } from "@/shared/ui/quantity-stepper";
+import { CheckoutSteps } from "@/shared/ui/checkout-steps";
 
 export default function CartPage() {
   const { items, addons, removeItem, updateQuantity, addAddon, removeAddon, total, itemCount } = useCart();
@@ -32,6 +33,7 @@ export default function CartPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+      <CheckoutSteps current={0} />
       <h1 className="text-2xl lg:text-3xl font-medium tracking-tight text-neutral-900 mb-8 lg:mb-12">
         Корзина
       </h1>
@@ -43,7 +45,7 @@ export default function CartPage() {
               key={item.bouquetId}
               className="flex gap-4 sm:gap-6 pb-6 border-b border-neutral-100"
             >
-              <div className="w-24 sm:w-32 aspect-square rounded-2xl overflow-hidden bg-neutral-100 flex-shrink-0 relative">
+              <div className="w-20 sm:w-28 aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-neutral-100 flex-shrink-0 relative">
                 <Image
                   src={item.image}
                   alt={item.name}
@@ -132,7 +134,7 @@ export default function CartPage() {
         </div>
 
         <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
-          <div className="bg-neutral-50 rounded-[2rem] p-6 lg:p-8 sticky top-24">
+          <div className="bg-neutral-50 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 lg:sticky lg:top-20">
             <h3 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
               Итого
             </h3>

@@ -6,6 +6,7 @@ import { BOUQUETS } from "@/shared/lib/mock-data";
 import { CatalogFilters } from "@/features/catalog/catalog-filters";
 import { ProductCard } from "@/features/catalog/product-card";
 import { Iconify } from "@/shared/ui/icon";
+import { RecentlyViewedStrip } from "@/features/catalog/recently-viewed-strip";
 
 type SortOption = "popular" | "price-asc" | "price-desc" | "newest";
 
@@ -219,6 +220,7 @@ function CatalogPageInner() {
           </div>
         </div>
       </div>
+      <RecentlyViewedStrip />
     </main>
   );
 }

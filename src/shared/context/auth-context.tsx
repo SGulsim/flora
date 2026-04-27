@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { useToast } from "@/shared/ui/toast";
 
 interface User {
   id: string;
@@ -9,164 +10,76 @@ interface User {
   phone: string;
 }
 
-interface StoredAccount extends User {
-  password: string;
-}
-
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
-  /** true после чтения сессии из localStorage на клиенте */
   authHydrated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (payload: { name: string; email: string; password: string }) => Promise<{ ok: boolean; error?: string }>;
+  register: (payload: { name: string; email: string; password: string; phone?: string }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
-  updateProfile: (data: Partial<User>) => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
-
-const STORAGE_KEY = "flora_user";
-const ACCOUNTS_STORAGE_KEY = "flora_accounts";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authHydrated, setAuthHydrated] = useState(false);
-
-  const readAccounts = (): StoredAccount[] => {
-    try {
-      const raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as StoredAccount[];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const writeAccounts = (accounts: StoredAccount[]) => {
-    localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
-  };
+  const { addToast } = useToast();
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const u = JSON.parse(stored);
-        setUser(u);
-        setUserCookie(u.id);
-      }
-    } catch {
-      setUser(null);
-    } finally {
-      setAuthHydrated(true);
-    }
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.user) setUser(data.user); })
+      .catch(() => {})
+      .finally(() => setAuthHydrated(true));
   }, []);
 
-  const setUserCookie = (userId: string | null) => {
-    if (typeof document === "undefined") return;
-    if (userId) {
-      document.cookie = `flora_user_id=${userId}; path=/; max-age=31536000`;
-    } else {
-      document.cookie = "flora_user_id=; path=/; max-age=0";
-    }
-  };
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.user) return false;
+    setUser(data.user);
+    addToast(`С возвращением, ${data.user.name.split(" ")[0]}! 👋`, "success");
+    return true;
+  }, [addToast]);
 
-  const persistUser = useCallback((u: User | null) => {
-    setUser(u);
-    if (u) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-      setUserCookie(u.id);
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-      setUserCookie(null);
-    }
+  const register = useCallback(async ({
+    name, email, password, phone,
+  }: { name: string; email: string; password: string; phone?: string }): Promise<{ ok: boolean; error?: string }> => {
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, phone }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error };
+    setUser(data.user);
+    addToast(`Добро пожаловать, ${data.user.name.split(" ")[0]}! 🌸`, "success");
+    return { ok: true };
+  }, [addToast]);
+
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
   }, []);
 
-  const login = useCallback(
-    async (email: string, password: string): Promise<boolean> => {
-      const normalizedEmail = email.trim().toLowerCase();
-      const accounts = readAccounts();
-      const acc = accounts.find((a) => a.email.toLowerCase() === normalizedEmail);
-      if (!acc || acc.password !== password) return false;
-      const u: User = {
-        id: acc.id,
-        email: acc.email,
-        name: acc.name,
-        phone: acc.phone,
-      };
-      persistUser(u);
-      return true;
-    },
-    [persistUser]
-  );
-
-  const register = useCallback(
-    async ({
-      name,
-      email,
-      password,
-    }: {
-      name: string;
-      email: string;
-      password: string;
-    }): Promise<{ ok: boolean; error?: string }> => {
-      const normalizedEmail = email.trim().toLowerCase();
-      const accounts = readAccounts();
-      const exists = accounts.some((a) => a.email.toLowerCase() === normalizedEmail);
-      if (exists) return { ok: false, error: "Пользователь с таким email уже существует" };
-
-      const account: StoredAccount = {
-        id: crypto.randomUUID(),
-        name: name.trim() || normalizedEmail.split("@")[0] || "Пользователь",
-        email: normalizedEmail,
-        phone: "+7 (999) 000-00-00",
-        password,
-      };
-      writeAccounts([...accounts, account]);
-      persistUser({
-        id: account.id,
-        name: account.name,
-        email: account.email,
-        phone: account.phone,
-      });
-      return { ok: true };
-    },
-    [persistUser]
-  );
-
-  const logout = useCallback(() => {
-    persistUser(null);
-  }, [persistUser]);
-
-  const updateProfile = useCallback(
-    (data: Partial<User>) => {
-      if (!user) return;
-      const nextUser = { ...user, ...data };
-      persistUser(nextUser);
-      const accounts = readAccounts();
-      const updated = accounts.map((a) =>
-        a.id === nextUser.id
-          ? { ...a, name: nextUser.name, email: nextUser.email, phone: nextUser.phone }
-          : a
-      );
-      writeAccounts(updated);
-    },
-    [user, persistUser]
-  );
+  const updateProfile = useCallback(async (data: Partial<User>) => {
+    const res = await fetch("/api/auth/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (res.ok && json.user) setUser(json.user);
+  }, []);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoggedIn: !!user,
-        authHydrated,
-        login,
-        register,
-        logout,
-        updateProfile,
-      }}
-    >
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, authHydrated, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

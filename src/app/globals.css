@@ -28,7 +28,8 @@
 }
 .custom-checkbox input:checked + div svg {
   opacity: 1;
-  transform: scale(1);
+  scale: 1;
+  transform: none;
 }
 
 .custom-radio input:checked + div {
@@ -74,4 +75,61 @@ input[type="range"]::-webkit-slider-runnable-track {
 
 body {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS safe area utilities */
+.pb-safe {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+/* View transitions — smooth page fade */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: 160ms ease-out both vt-fade-out;
+}
+::view-transition-new(root) {
+  animation: 200ms ease-in both vt-fade-in;
+}
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+}
+
+/* Shimmer skeleton animation */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f3f3f3 25%, #e8e8e8 50%, #f3f3f3 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Toast slide-in */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(8px) scale(.97); }
+}
+.toast-enter { animation: toast-in 0.22s cubic-bezier(.22,1,.36,1) both; }
+.toast-exit  { animation: toast-out 0.18s ease-in both; }
+
+/* Cursor pointer for all interactive elements */
+button,
+[role="button"],
+select,
+label.cursor-pointer,
+summary {
+  cursor: pointer;
 }

@@ -11,6 +11,7 @@ export interface Bouquet {
   rating: number;
   reviewsCount: number;
   isHit?: boolean;
+  stock?: number;
 }
 
 export interface Category {
@@ -47,6 +48,7 @@ export const BOUQUETS: Bouquet[] = [
     rating: 4.9,
     reviewsCount: 12,
     isHit: true,
+    stock: 3,
   },
   {
     id: "2",
@@ -116,6 +118,7 @@ export const BOUQUETS: Bouquet[] = [
     rating: 4.95,
     reviewsCount: 18,
     isHit: true,
+    stock: 2,
   },
   {
     id: "6",
@@ -353,19 +356,38 @@ export const ADDONS = [
 
 export const SUBSCRIPTION_PLANS = [
   {
-    id: "classic",
-    name: "Классик",
-    description: "Средние букеты для украшения дома или рабочего стола.",
-    price: 3500,
+    id: "regular",
+    name: "Два раза в месяц",
+    tagline: "Дом всегда в цветах",
+    description: "2 букета каждый месяц — свежесть каждые две недели и скидка на все остальные заказы.",
+    price: 4990,
+    priceNote: "/ месяц",
     popular: true,
-    features: ["Сезонные цветы", "Бесплатная ваза (в 1 раз)"],
+    deliveries: 2,
+    features: [
+      "2 букета в месяц",
+      "Бесплатная доставка",
+      "Скидка 15% на все заказы",
+      "Персональная открытка",
+      "Бесплатная ваза при первом заказе",
+    ],
+    cta: "Оформить подписку",
   },
   {
-    id: "premium",
-    name: "Премиум",
-    description: "Роскошные объемные композиции и экзотические цветы.",
-    price: 7000,
+    id: "starter",
+    name: "Раз в месяц",
+    tagline: "Для тех, кто хочет цветы без забот",
+    description: "1 авторский букет каждый месяц — мы сами выберем лучшее к сезону.",
+    price: 2990,
+    priceNote: "/ месяц",
     popular: false,
-    features: ["Редкие сорта", "Премиум упаковка"],
+    deliveries: 1,
+    features: [
+      "1 букет в месяц",
+      "Бесплатная доставка",
+      "Персональная открытка",
+      "Сезонный состав",
+    ],
+    cta: "Начать подписку",
   },
 ];

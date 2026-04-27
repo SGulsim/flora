@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SUBSCRIPTION_PLANS } from "@/shared/lib/mock-data";
 import { formatPhone, isValidPhone } from "@/shared/lib/phone";
-import { appendSubscription, type SavedSubscription } from "@/shared/lib/subscriptions-store";
 import { useAuth } from "@/shared/context/auth-context";
 
 function SubscriptionCheckoutInner() {
@@ -35,6 +34,13 @@ function SubscriptionCheckoutInner() {
     }
   }, [authHydrated, plan, isLoggedIn, router]);
 
+  useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.phone) setPhone(user.phone);
+    }
+  }, [user]);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -60,23 +66,23 @@ function SubscriptionCheckoutInner() {
     }
 
     setLoading(true);
-    const payload: SavedSubscription = {
-      id: crypto.randomUUID(),
-      userId: user.id,
-      planId: plan.id,
-      planName: plan.name,
-      price: plan.price,
-      name: name.trim(),
-      phone,
-      startDate,
-      comment: comment.trim(),
-      status: "active",
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      appendSubscription(payload);
-      router.push(`/subscription/success?id=${payload.id}`);
+      const res = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: plan.id,
+          planName: plan.name,
+          price: plan.price,
+          name: name.trim(),
+          phone,
+          startDate,
+          comment: comment.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      router.push(`/subscription/success?id=${data.subscription.id}`);
     } catch {
       setError("Не удалось сохранить подписку. Попробуйте ещё раз.");
       setLoading(false);
@@ -133,7 +139,7 @@ function SubscriptionCheckoutInner() {
 
       <form
         onSubmit={onSubmit}
-        className="bg-white border border-neutral-100 rounded-[2rem] p-6 sm:p-8 shadow-sm space-y-4"
+        className="bg-white border border-neutral-100 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 shadow-sm space-y-4"
       >
         <div>
           <label className="block text-xs text-neutral-500 mb-1.5 ml-1">Имя получателя</label>
@@ -160,6 +166,7 @@ function SubscriptionCheckoutInner() {
           <input
             type="date"
             value={startDate}
+            min={new Date().toISOString().split("T")[0]}
             onChange={(e) => setStartDate(e.target.value)}
             className="w-full px-4 py-3 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all"
           />

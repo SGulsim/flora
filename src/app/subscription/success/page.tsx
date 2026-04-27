@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Confetti } from "@/shared/ui/confetti";
 
 function SubscriptionSuccessInner() {
   const searchParams = useSearchParams();
@@ -10,6 +11,10 @@ function SubscriptionSuccessInner() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-16 text-center">
+      <Confetti />
+      <div className="w-20 h-20 rounded-full bg-green-50 text-green-500 flex items-center justify-center mx-auto mb-6 text-4xl">
+        🌸
+      </div>
       <h1 className="text-3xl font-medium tracking-tight text-neutral-900 mb-4">
         Подписка оформлена
       </h1>

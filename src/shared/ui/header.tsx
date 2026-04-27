@@ -136,103 +136,115 @@ export function Header() {
       </div>
 
       {menuOpen && (
-        <div className="lg:hidden fixed inset-0 z-[60]">
+        <>
+          {/* Backdrop */}
           <button
             type="button"
             aria-label="Закрыть меню"
             onClick={closeMenu}
-            className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 z-[60] bg-neutral-900/50 backdrop-blur-sm"
           />
+
+          {/* Drawer panel — fixed independently so height = 100dvh reliably */}
           <aside
             ref={mobileNavRef}
             id="mobile-navigation"
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-nav-title"
-            className="absolute left-0 top-0 bottom-0 w-[82%] max-w-sm bg-white shadow-xl flex flex-col outline-none"
+            className="lg:hidden fixed left-0 top-0 z-[61] w-[85%] max-w-xs bg-white shadow-2xl flex flex-col"
+            style={{ height: "100dvh" }}
           >
-            <div className="flex items-center justify-between h-16 px-5 border-b border-neutral-100">
+            {/* Header */}
+            <div className="flex items-center justify-between h-14 px-5 border-b border-neutral-100 flex-shrink-0">
               <span
                 id="mobile-nav-title"
-                className="text-xl font-semibold tracking-tighter text-neutral-900 uppercase"
+                className="text-lg font-semibold tracking-tighter text-neutral-900 uppercase"
               >
                 FLORA
               </span>
               <button
                 type="button"
                 onClick={closeMenu}
-                className="p-2 -mr-2 text-neutral-500 hover:text-neutral-900"
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 transition-colors"
                 aria-label="Закрыть меню"
               >
-                <Iconify icon="solar:close-circle-linear" width={24} height={24} />
+                <Iconify icon="solar:close-square-linear" width={20} height={20} />
               </button>
             </div>
 
-            <nav className="flex-1 overflow-y-auto py-4 px-3" aria-label="Мобильное меню">
-              <ul className="space-y-1">
+            {/* Nav links — scrollable middle section */}
+            <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Мобильное меню">
+              <ul className="space-y-0.5">
                 {NAV_LINKS.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
                       onClick={closeMenu}
-                      className="block px-3 py-3 rounded-xl text-base font-medium text-neutral-800 hover:bg-neutral-50 transition-colors"
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-neutral-800 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
                     >
                       {link.label}
                     </Link>
                   </li>
                 ))}
-                <li>
-                  <Link
-                    href={isLoggedIn ? FAVORITES_PATH : FAVORITES_LOGIN}
-                    onClick={closeMenu}
-                    className="flex items-center justify-between px-3 py-3 rounded-xl text-base font-medium text-neutral-800 hover:bg-neutral-50 transition-colors"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Iconify icon="solar:heart-linear" width={20} height={20} />
-                      Избранное
-                    </span>
-                    {favoriteCount > 0 && (
-                      <span className="min-w-[22px] h-5 px-1.5 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-                        {favoriteCount}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href={isLoggedIn ? "/account" : "/login"}
-                    onClick={closeMenu}
-                    className="flex items-center gap-2 px-3 py-3 rounded-xl text-base font-medium text-neutral-800 hover:bg-neutral-50 transition-colors"
-                  >
-                    <Iconify icon="solar:user-circle-linear" width={20} height={20} />
-                    {isLoggedIn ? "Личный кабинет" : "Войти"}
-                  </Link>
-                </li>
               </ul>
 
-              <div className="mt-4 pt-4 border-t border-neutral-100">
+              <div className="mt-2 pt-2 border-t border-neutral-100 space-y-0.5">
+                <Link
+                  href={isLoggedIn ? FAVORITES_PATH : FAVORITES_LOGIN}
+                  onClick={closeMenu}
+                  className="flex items-center justify-between px-3 py-3 rounded-xl text-sm font-medium text-neutral-800 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <Iconify icon="solar:heart-linear" width={18} height={18} />
+                    Избранное
+                  </span>
+                  {favoriteCount > 0 && (
+                    <span className="min-w-[20px] h-5 px-1.5 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                      {favoriteCount}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href={isLoggedIn ? "/account" : "/login"}
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-neutral-800 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
+                >
+                  <Iconify icon="solar:user-circle-linear" width={18} height={18} />
+                  {isLoggedIn ? "Личный кабинет" : "Войти"}
+                </Link>
+              </div>
+
+              <div className="mt-2 pt-2 border-t border-neutral-100">
                 <Link
                   href="/support"
                   onClick={closeMenu}
-                  className="flex items-center gap-2 px-3 py-3 rounded-xl text-base font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 active:bg-rose-100 transition-colors"
                 >
-                  <Iconify icon="solar:heart-linear" width={20} height={20} />
+                  <Iconify icon="solar:heart-linear" width={18} height={18} />
                   Поддержать авторов
                 </Link>
               </div>
             </nav>
 
-            <div className="p-4 border-t border-neutral-100">
+            {/* Footer CTA */}
+            <div className="flex-shrink-0 p-4 border-t border-neutral-100 pb-safe">
               <Link
-                href="/catalog"
+                href="/cart"
                 onClick={closeMenu}
-                className="block w-full text-center py-3 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 active:bg-neutral-700 transition-colors"
               >
-                В каталог
+                <Iconify icon="solar:bag-3-linear" width={16} height={16} />
+                Корзина
+                {itemCount > 0 && (
+                  <span className="bg-white text-neutral-900 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
               </Link>
             </div>
           </aside>
-        </div>
+        </>
       )}
     </header>
   );

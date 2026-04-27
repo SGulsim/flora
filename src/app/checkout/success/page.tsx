@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/shared/context/cart-context";
 import { Iconify } from "@/shared/ui/icon";
+import { CheckoutSteps } from "@/shared/ui/checkout-steps";
+import { Confetti } from "@/shared/ui/confetti";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -16,7 +18,9 @@ function SuccessContent() {
   }, [clearCart]);
 
   return (
-    <main className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+    <main className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+      <Confetti />
+      <CheckoutSteps current={3} />
       <div className="w-20 h-20 rounded-full bg-green-50 text-green-500 flex items-center justify-center mx-auto mb-6">
         <Iconify icon="solar:check-read-linear" width={40} height={40} />
       </div>

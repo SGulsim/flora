@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/shared/context/auth-context";
+import { formatPhone, isValidPhone } from "@/shared/lib/phone";
 
 function RegisterForm() {
   const router = useRouter();
@@ -11,6 +12,7 @@ function RegisterForm() {
   const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,6 +22,10 @@ function RegisterForm() {
     returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
       ? returnTo
       : "/account";
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhone(e.target.value));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,12 +39,16 @@ function RegisterForm() {
       setError("Введите email");
       return;
     }
+    if (phone && !isValidPhone(phone)) {
+      setError("Введите корректный номер телефона");
+      return;
+    }
     if (password.length < 6) {
       setError("Пароль должен быть не короче 6 символов");
       return;
     }
     setLoading(true);
-    const res = await register({ name: name.trim(), email: cleanEmail, password });
+    const res = await register({ name: name.trim(), email: cleanEmail, password, phone });
     setLoading(false);
     if (!res.ok) {
       setError(res.error ?? "Не удалось зарегистрироваться");
@@ -73,6 +83,18 @@ function RegisterForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="example@mail.ru"
+            className="w-full px-4 py-3 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-neutral-500 mb-1.5 ml-1">
+            Телефон <span className="text-neutral-400">(необязательно)</span>
+          </label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={handlePhoneChange}
+            placeholder="+7 (999) 000-00-00"
             className="w-full px-4 py-3 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all"
           />
         </div>

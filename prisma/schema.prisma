@@ -7,13 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String   @default("")
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders          Order[]
+  favorites       Favorite[]
+  occasions       Occasion[]
+  subscriptions   DbSubscription[]
+  quizCollections QuizCollection[]
+  cartItems       CartItem[]
+}
+
 model Order {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   userId    String?
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   total     Int
-  status    String   @default("pending")
+  status    String      @default("pending")
   cardText  String?
-  createdAt DateTime @default(now())
+  createdAt DateTime    @default(now())
 
   items OrderItem[]
 }
@@ -24,4 +42,62 @@ model OrderItem {
   bouquetId String
   quantity  Int
   order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  userId    String
+  bouquetId String
+  name      String
+  price     Int
+  image     String
+  quantity  Int    @default(1)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bouquetId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  bouquetId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bouquetId])
+}
+
+model Occasion {
+  id            String   @id @default(cuid())
+  userId        String
+  date          String
+  type          String
+  recipientName String
+  reminderDays  Int      @default(3)
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DbSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  planId    String
+  planName  String
+  price     Int
+  name      String
+  phone     String
+  startDate String
+  comment   String   @default("")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model QuizCollection {
+  id         String   @id @default(cuid())
+  userId     String
+  answers    Json
+  bouquetIds String[]
+  savedAt    DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

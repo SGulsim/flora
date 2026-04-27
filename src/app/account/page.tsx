@@ -5,22 +5,22 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/shared/context/auth-context";
 import { useFavorites } from "@/shared/context/favorites-context";
-import {
-  getOccasions,
-  addOccasion,
-  removeOccasion,
-  type Occasion,
-} from "@/shared/lib/occasions-store";
-import { BOUQUETS } from "@/shared/lib/mock-data";
-import {
-  readSubscriptions,
-  type SavedSubscription,
-} from "@/shared/lib/subscriptions-store";
+import { BOUQUETS, OCCASIONS } from "@/shared/lib/mock-data";
+import { formatPhone } from "@/shared/lib/phone";
+
+type Occasion = {
+  id: string;
+  date: string;
+  type: string;
+  recipientName: string;
+  reminderDays: number;
+};
 import { ProductCard } from "@/features/catalog/product-card";
 import { Iconify } from "@/shared/ui/icon";
+import { OrderRowSkeleton } from "@/shared/ui/skeleton";
 
 const OCCASION_TYPES = [
-  { id: "birthday", label: "День рождения" },
+  ...OCCASIONS.map((o) => ({ id: o.id, label: o.label })),
   { id: "anniversary", label: "Годовщина" },
   { id: "other", label: "Другое" },
 ];
@@ -36,14 +36,15 @@ type SavedQuizSelection = {
   bouquetIds: string[];
 };
 
-type TabId = "profile" | "orders" | "occasions" | "subscriptions" | "favorites";
+type TabId = "profile" | "orders" | "occasions" | "subscriptions" | "favorites" | "collections";
 
 function parseTab(tab: string | null): TabId {
   if (
     tab === "orders" ||
     tab === "occasions" ||
     tab === "subscriptions" ||
-    tab === "favorites"
+    tab === "favorites" ||
+    tab === "collections"
   ) {
     return tab;
   }
@@ -67,8 +68,8 @@ function AccountPageInner() {
     recipientName: "",
     reminderDays: 3,
   });
-  const [lastQuizSelection, setLastQuizSelection] = useState<SavedQuizSelection | null>(null);
-  const [subscriptions, setSubscriptions] = useState<SavedSubscription[]>([]);
+  const [quizCollections, setQuizCollections] = useState<SavedQuizSelection[]>([]);
+  const [subscriptions, setSubscriptions] = useState<{ id: string; planName: string; price: number; startDate: string; name: string; comment: string }[]>([]);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -98,33 +99,36 @@ function AccountPageInner() {
     router.replace(q ? `/account?${q}` : "/account", { scroll: false });
   };
 
+  // Load occasions from API
   useEffect(() => {
-    setOccasions(getOccasions());
-  }, [activeTab, showAddOccasion]);
+    if (!isLoggedIn) return;
+    fetch("/api/occasions")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data.occasions)) setOccasions(data.occasions); })
+      .catch(() => {});
+  }, [activeTab, showAddOccasion, isLoggedIn]);
 
+  // Load quiz collections from API
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem("flora:last-quiz-selection");
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as SavedQuizSelection;
-      if (!parsed?.answers || !Array.isArray(parsed?.bouquetIds)) return;
-      setLastQuizSelection(parsed);
-    } catch {
-      setLastQuizSelection(null);
-    }
-  }, []);
+    if (!isLoggedIn) return;
+    fetch("/api/quiz-collections")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data.collections)) setQuizCollections(data.collections.map((c: { savedAt: string; answers: SavedQuizSelection["answers"]; bouquetIds: string[] }) => ({ savedAt: c.savedAt, answers: c.answers, bouquetIds: c.bouquetIds }))); })
+      .catch(() => {});
+  }, [activeTab, isLoggedIn]);
 
+  // Load subscriptions from API
   useEffect(() => {
-    if (!user?.id) {
-      setSubscriptions([]);
-      return;
-    }
-    setSubscriptions(readSubscriptions(user.id));
-  }, [activeTab, user?.id]);
+    if (!isLoggedIn) return;
+    fetch("/api/subscriptions")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data.subscriptions)) setSubscriptions(data.subscriptions); })
+      .catch(() => {});
+  }, [activeTab, isLoggedIn]);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile({ name, email, phone });
+    await updateProfile({ name, email, phone });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -134,18 +138,23 @@ function AccountPageInner() {
     router.push("/");
   };
 
-  const handleAddOccasion = (e: React.FormEvent) => {
+  const handleAddOccasion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newOccasion.date || !newOccasion.recipientName) return;
-    addOccasion(newOccasion);
-    setOccasions(getOccasions());
+    await fetch("/api/occasions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newOccasion),
+    });
+    const data = await fetch("/api/occasions").then((r) => r.json());
+    if (Array.isArray(data.occasions)) setOccasions(data.occasions);
     setShowAddOccasion(false);
     setNewOccasion({ date: "", type: "birthday", recipientName: "", reminderDays: 3 });
   };
 
-  const handleRemoveOccasion = (id: string) => {
-    removeOccasion(id);
-    setOccasions(getOccasions());
+  const handleRemoveOccasion = async (id: string) => {
+    await fetch(`/api/occasions/${id}`, { method: "DELETE" });
+    setOccasions((prev) => prev.filter((o) => o.id !== id));
   };
 
   const getOccasionLabel = (occasionId: string) => {
@@ -191,8 +200,37 @@ function AccountPageInner() {
       <h1 className="text-2xl font-medium tracking-tight text-neutral-900 mb-8">
         Личный кабинет
       </h1>
-      <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
-        <aside className="w-full md:w-56 flex-shrink-0 space-y-1">
+      {/* Mobile: horizontal scrollable tabs */}
+      <div className="md:hidden -mx-4 px-4 mb-6 overflow-x-auto">
+        <div className="flex gap-2 min-w-max pb-1">
+          {(
+            [
+              { id: "profile", label: "Профиль" },
+              { id: "orders", label: "Заказы" },
+              { id: "occasions", label: "Поводы" },
+              { id: "subscriptions", label: "Подписки" },
+              { id: "collections", label: `Подборки${quizCollections.length > 0 ? ` (${quizCollections.length})` : ""}` },
+              { id: "favorites", label: `Избранное${favoriteIds.length > 0 ? ` (${favoriteIds.length})` : ""}` },
+            ] as { id: TabId; label: string }[]
+          ).map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === t.id
+                  ? "bg-neutral-900 text-white"
+                  : "bg-white border border-neutral-200 text-neutral-600"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-6 lg:gap-12">
+        <aside className="hidden md:block w-56 flex-shrink-0 space-y-1">
           <button
             type="button"
             onClick={() => setTab("profile")}
@@ -239,6 +277,22 @@ function AccountPageInner() {
           </button>
           <button
             type="button"
+            onClick={() => setTab("collections")}
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-between ${
+              activeTab === "collections"
+                ? "bg-neutral-100 text-neutral-900"
+                : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900"
+            }`}
+          >
+            <span>Подборки</span>
+            {quizCollections.length > 0 && (
+              <span className="text-xs font-medium text-neutral-400">
+                {quizCollections.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
             onClick={() => setTab("favorites")}
             className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-between ${
               activeTab === "favorites"
@@ -262,7 +316,7 @@ function AccountPageInner() {
           </button>
         </aside>
 
-        <div className="flex-1 bg-white border border-neutral-100 rounded-[2rem] p-6 sm:p-8 shadow-sm">
+        <div className="flex-1 bg-white border border-neutral-100 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 shadow-sm min-w-0">
           {activeTab === "profile" && (
             <>
               <h2 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
@@ -298,7 +352,7 @@ function AccountPageInner() {
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(formatPhone(e.target.value))}
                     placeholder="+7 (999) 000-00-00"
                     className="w-full px-4 py-3 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:border-neutral-300 focus:outline-none transition-all"
                   />
@@ -316,52 +370,6 @@ function AccountPageInner() {
                 </div>
               </form>
 
-              <div className="mt-10 border-t border-neutral-100 pt-8">
-                <h3 className="text-base font-medium tracking-tight text-neutral-900 mb-3">
-                  Последний подбор
-                </h3>
-                {!lastQuizSelection ? (
-                  <p className="text-sm text-neutral-500">
-                    Пока ничего не сохранено. Пройдите квиз и сохраните подборку.
-                  </p>
-                ) : (
-                  <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4 sm:p-5">
-                    <p className="text-xs text-neutral-400 mb-2">
-                      Сохранено:{" "}
-                      {new Date(lastQuizSelection.savedAt).toLocaleString("ru-RU")}
-                    </p>
-                    <p className="text-sm text-neutral-600 mb-3">
-                      Повод: {getOccasionLabel(lastQuizSelection.answers.occasion)} · Бюджет:{" "}
-                      {getBudgetLabel(lastQuizSelection.answers.budget)} · Формат:{" "}
-                      {getSizeLabel(lastQuizSelection.answers.size)}
-                    </p>
-                    <p className="text-sm text-neutral-500 mb-4">
-                      В подборке:{" "}
-                      {lastQuizSelection.bouquetIds
-                        .slice(0, 3)
-                        .map((id) => BOUQUETS.find((b) => b.id === id)?.name)
-                        .filter(Boolean)
-                        .join(", ")}
-                      {lastQuizSelection.bouquetIds.length > 3 ? " и другие" : ""}.
-                    </p>
-                    <Link
-                      href={`/quiz/results?occasion=${encodeURIComponent(
-                        lastQuizSelection.answers.occasion
-                      )}&budget=${encodeURIComponent(
-                        lastQuizSelection.answers.budget
-                      )}&size=${encodeURIComponent(
-                        lastQuizSelection.answers.size
-                      )}&color=${encodeURIComponent(
-                        lastQuizSelection.answers.color.join(",")
-                      )}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
-                    >
-                      Открыть подборку
-                      <Iconify icon="solar:arrow-right-linear" width={16} height={16} />
-                    </Link>
-                  </div>
-                )}
-              </div>
             </>
           )}
           {activeTab === "orders" && (
@@ -420,7 +428,7 @@ function AccountPageInner() {
 
               {showAddOccasion && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                  <div className="bg-white rounded-2xl p-5 mx-4 max-w-md w-full max-h-[90vh] overflow-y-auto">
                     <h3 className="text-lg font-medium mb-4">Добавить повод</h3>
                     <form onSubmit={handleAddOccasion} className="space-y-4">
                       <div>
@@ -507,6 +515,58 @@ function AccountPageInner() {
                       </div>
                     </form>
                   </div>
+                </div>
+              )}
+            </>
+          )}
+          {activeTab === "collections" && (
+            <>
+              <h2 className="text-lg font-medium tracking-tight text-neutral-900 mb-6">
+                Мои подборки
+              </h2>
+              {quizCollections.length === 0 ? (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-5">
+                    Пока нет сохранённых подборок. Пройдите квиз и нажмите «Сохранить подборку».
+                  </p>
+                  <Link
+                    href="/quiz"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
+                  >
+                    Пройти квиз
+                    <Iconify icon="solar:arrow-right-linear" width={16} height={16} />
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {[...quizCollections].reverse().map((sel, idx) => (
+                    <div key={idx} className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4 sm:p-5">
+                      <p className="text-xs text-neutral-400 mb-2">
+                        Сохранено: {new Date(sel.savedAt).toLocaleString("ru-RU")}
+                      </p>
+                      <p className="text-sm text-neutral-600 mb-3">
+                        Повод: {getOccasionLabel(sel.answers.occasion)} · Бюджет:{" "}
+                        {getBudgetLabel(sel.answers.budget)} · Формат:{" "}
+                        {getSizeLabel(sel.answers.size)}
+                      </p>
+                      <p className="text-sm text-neutral-500 mb-4">
+                        В подборке:{" "}
+                        {sel.bouquetIds
+                          .slice(0, 3)
+                          .map((id) => BOUQUETS.find((b) => b.id === id)?.name)
+                          .filter(Boolean)
+                          .join(", ")}
+                        {sel.bouquetIds.length > 3 ? " и другие" : ""}.
+                      </p>
+                      <Link
+                        href={`/quiz/results?occasion=${encodeURIComponent(sel.answers.occasion)}&budget=${encodeURIComponent(sel.answers.budget)}&size=${encodeURIComponent(sel.answers.size)}&color=${encodeURIComponent(sel.answers.color.join(","))}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition-all"
+                      >
+                        Открыть подборку
+                        <Iconify icon="solar:arrow-right-linear" width={16} height={16} />
+                      </Link>
+                    </div>
+                  ))}
                 </div>
               )}
             </>
@@ -600,6 +660,16 @@ function AccountPageInner() {
   );
 }
 
+function getDisplayStatus(dateStr: string): { label: string; color: string } {
+  const created = new Date(dateStr);
+  const minutesAgo = (Date.now() - created.getTime()) / 60000;
+  if (minutesAgo < 5) return { label: "Принят", color: "text-blue-600 bg-blue-50" };
+  if (minutesAgo < 30) return { label: "Подтверждён", color: "text-purple-600 bg-purple-50" };
+  if (minutesAgo < 90) return { label: "Собирается", color: "text-amber-600 bg-amber-50" };
+  if (minutesAgo < 180) return { label: "В доставке", color: "text-orange-600 bg-orange-50" };
+  return { label: "Доставлен", color: "text-green-600 bg-green-50" };
+}
+
 function OrdersTab() {
   const [orders, setOrders] = useState<
     { id: string; total: number; date: string; status: string }[]
@@ -641,7 +711,9 @@ function OrdersTab() {
         История заказов
       </h2>
       {loading && (
-        <p className="text-sm text-neutral-500">Загружаем заказы…</p>
+        <div className="space-y-3">
+          {[1,2,3].map(i => <OrderRowSkeleton key={i} />)}
+        </div>
       )}
       {!loading && error && (
         <div className="rounded-xl border border-red-100 bg-red-50/80 p-4 text-sm text-red-700">
@@ -660,20 +732,30 @@ function OrdersTab() {
       )}
       {!loading && !error && orders.length > 0 && (
         <ul className="space-y-4">
-          {orders.map((o) => (
-            <li
-              key={o.id}
-              className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl"
-            >
-              <div>
-                <p className="font-medium text-neutral-900">#{o.id}</p>
-                <p className="text-sm text-neutral-500">
-                  {new Date(o.date).toLocaleDateString("ru-RU")} · {o.status}
-                </p>
-              </div>
-              <span className="font-medium">{o.total.toLocaleString("ru-RU")} ₽</span>
-            </li>
-          ))}
+          {orders.map((o) => {
+            const status = getDisplayStatus(o.date);
+            return (
+              <li
+                key={o.id}
+                className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl"
+              >
+                <div>
+                  <p className="font-medium text-neutral-900">#{o.id.slice(0, 8)}</p>
+                  <p className="text-sm text-neutral-500">
+                    {new Date(o.date).toLocaleDateString("ru-RU")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${status.color}`}>
+                    {status.label}
+                  </span>
+                  <span className="font-medium text-neutral-900">
+                    {o.total.toLocaleString("ru-RU")} ₽
+                  </span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </>
